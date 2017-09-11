@@ -83,7 +83,7 @@ public class JoinedUpWriting{
 			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) 
 //			System.out.println("Target is " + target);
 			
-			endTarget = (i >= END.length()) ? END : END.substring(0,i); 
+			endTarget = (i >= END.length()) ? END : END.substring(0, i); 
 			if(target.equals(endTarget)){ //or minsize + 2?? 
 				//System.out.println("CHAIN FINISHED");
 				//System.out.println("Result " + r);
@@ -95,14 +95,14 @@ public class JoinedUpWriting{
 				
 				for(String x : dict){
 					//System.out.println(x);
-					xTarget = (i >= x.length()) ? x : x.substring(0,i); 
+					xTarget = (i >= x.length()) ? x : x.substring(0, i); 
 					if(target.equals(xTarget)){ //then these two words are singly joined 
 					//	System.out.println(a + " matched with " + x);
 						r += x +" "; 
 				//		System.out.println("Result " + r);
 						//find out whether to use i or minSize
 						singlyCount++; 
-						return findChain(x, END, r, minSize);
+						return findChain(x, END, r, i);
 					}
 				}
 			}
