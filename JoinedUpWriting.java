@@ -17,6 +17,7 @@ import java.io.*;
 
 public class JoinedUpWriting{
 	public static ArrayList<String> dict;
+	public static int singlyCount;
 	
 	public static void main(String[]args){
 		Scanner sc = new Scanner(System.in);
@@ -39,32 +40,29 @@ public class JoinedUpWriting{
 	public static String singlyJoined(String a, String b){
 		int minCommonLength = Math.min(a.length(), b.length())/2; 
 		StringBuilder result = new StringBuilder(); 
-		
-		//append number of singly joined words (at least 2) 
-		
-		result.append(a + " ");
-		
-		//recursively find a chain of words that reach b and append them all. 
 		String r = "";
-		String chain = findChain(a, b, r, minCommonLength, 0); 
-		result.append(chain);
-		//find all strings which have prefix as the suffix of a
-		//for(String s: dict){
+		String chain = findChain(a, b, r, minCommonLength); 
+		//singlyCount = 0;
+		
+		if(chain.equals("INVALID")){
+			return Integer.toString(singlyCount);
+		}else{
+			result.append(singlyCount + " ");
+			result.append(a + " ");
+			result.append(chain);
+			result.append(b);
 			
-			//result.append(s +" ");
-	//	}
-		
-		result.append(b);
-		
-		
-		
-		return result.toString(); 
+			return result.toString(); 
+		}
 	}
 	
 	
-	public static String findChain(String a, String END, String res, int minSize, int count){
+	public static String findChain(String a, String END, String res, int minSize){
 		String r = "";
 		r += res; 
+		String xTarget;
+		String target; 
+		String endTarget;
 		
 		
 		//if we have looked through the whole dict, stop. 
@@ -79,41 +77,39 @@ public class JoinedUpWriting{
 				//if not found, keep looping to the next word
 		
 		//look at last minSize letters or greater of a; 
-		System.out.println("Min size is " + minSize);
-		
-		String target = a.substring(a.length()-(minSize+1), a.length());  //(inclusive, exclusive) 
-		System.out.println("Target is " + target);
-		
-		//seeing different lengths of common part
-	/*	for(int i=minSize; i< a.length(); i++){
+	//	System.out.println("Min size is " + minSize);
+		//seeing different lengths of common part - OR should I count down?
+		for(int i=minSize; i< a.length(); i++){
+			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) 
+//			System.out.println("Target is " + target);
 			
-		}*/
-		
-		if(target.equals(END.substring(0, minSize+1))){ //or minsize + 2?? 
-			System.out.println("CHAIN FINISHED");
-			System.out.println("Result " + r);
-			return r;  //a = b; stopping case 
-		}else{
-			System.out.println("...still searching...");
-			for(String x : dict){
+			endTarget = (i >= END.length()) ? END : END.substring(0,i); 
+			if(target.equals(endTarget)){ //or minsize + 2?? 
+				//System.out.println("CHAIN FINISHED");
+				//System.out.println("Result " + r);
+				singlyCount= singlyCount + 2; //first is matched to second 
+			//	System.out.println("Count " + singlyCount);
+				return r;  //a = b; stopping case 
+			}else{
+			//	System.out.println("...still searching...");
 				
-				//System.out.println(x);
-				if(target.equals(x.substring(0, minSize+1))){ //then these two words are singly joined 
-					System.out.println(a + " matched with " + x);
-					r += x; 
-					return findChain(x, END, res, minSize, count++);
+				for(String x : dict){
+					//System.out.println(x);
+					xTarget = (i >= x.length()) ? x : x.substring(0,i); 
+					if(target.equals(xTarget)){ //then these two words are singly joined 
+					//	System.out.println(a + " matched with " + x);
+						r += x +" "; 
+				//		System.out.println("Result " + r);
+						//find out whether to use i or minSize
+						singlyCount++; 
+						return findChain(x, END, r, minSize);
+					}
 				}
 			}
-		
-			String notFound = "Searched entire dictionary: Chain not found ";
-			return notFound; 
 		}
-		
-		
+		String notFound = "INVALID";
+		return notFound; 
 	}
-	
-	
-	
 	
 	//The common part is at least half as long as both of the words
 	public static String doublyJoined(String a, String b, ArrayList<String> dict){
