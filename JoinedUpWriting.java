@@ -18,20 +18,19 @@ import java.io.*;
 public class JoinedUpWriting{
 	public static ArrayList<String> dict;
 	public static int singlyCount;
+	public static int doublyCount;
 	
 	public static void main(String[]args){
 		Scanner sc = new Scanner(System.in);
 		while(sc.hasNextLine()){
-			String a = args[0]; //not being scanned! 
-			//System.out.println("a is " + a);
+			String a = args[0];
 			String b = args[1];
-			//System.out.println("b is " + b);
 			dict = new ArrayList<String>();//scan in a given dictionary - up to 100,000 words
 			while(sc.hasNext()){
 				dict.add(sc.next());
 			}
 			System.out.println(singlyJoined(a, b));
-			//System.out.println(doublyJoined(a, b, dict));
+			System.out.println(doublyJoined(a, b));
 		}
 		sc.close(); 
 	}
@@ -40,30 +39,26 @@ public class JoinedUpWriting{
 	public static String singlyJoined(String a, String b){
 		int minCommonLength = Math.min(a.length(), b.length())/2; 
 		StringBuilder result = new StringBuilder(); 
-		String r = "";
-		String chain = findChain(a, b, r, minCommonLength); 
-		//singlyCount = 0;
+		StringBuilder chainBuilder = new StringBuilder(); 
+		String chain = findChain(a, b, chainBuilder, minCommonLength); 
 		
 		if(chain.equals("INVALID")){
-			return Integer.toString(singlyCount);
+			return "0";
 		}else{
+			result.append("SINGLY ");
 			result.append(singlyCount + " ");
 			result.append(a + " ");
 			result.append(chain);
 			result.append(b);
-			
 			return result.toString(); 
 		}
 	}
 	
 	
-	public static String findChain(String a, String END, String res, int minSize){
-		String r = "";
-		r += res; 
+	public static String findChain(String a, String END, StringBuilder res, int minSize){
 		String xTarget;
 		String target; 
 		String endTarget;
-		
 		
 		//if we have looked through the whole dict, stop. 
 		
@@ -77,32 +72,35 @@ public class JoinedUpWriting{
 				//if not found, keep looping to the next word
 		
 		//look at last minSize letters or greater of a; 
-	//	System.out.println("Min size is " + minSize);
+		System.out.println("Min size is " + minSize);
 		//seeing different lengths of common part - OR should I count down?
 		for(int i=minSize; i< a.length(); i++){
 			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) 
-//			System.out.println("Target is " + target);
+			System.out.println("Target is " + target);
 			
 			endTarget = (i >= END.length()) ? END : END.substring(0, i); 
-			if(target.equals(endTarget)){ //or minsize + 2?? 
-				//System.out.println("CHAIN FINISHED");
-				//System.out.println("Result " + r);
+			if(target.equals(endTarget)){
+				System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
+			//	System.out.println("Result " + res);
 				singlyCount= singlyCount + 2; //first is matched to second 
-			//	System.out.println("Count " + singlyCount);
-				return r;  //a = b; stopping case 
+				doublyCount= doublyCount + 2;
+				//	System.out.println("Count " + singlyCount);
+				return res.toString();  //a = b; stopping case 
 			}else{
-			//	System.out.println("...still searching...");
+		//		System.out.println("...still searching...");
 				
 				for(String x : dict){
-					//System.out.println(x);
 					xTarget = (i >= x.length()) ? x : x.substring(0, i); 
+					
 					if(target.equals(xTarget)){ //then these two words are singly joined 
-					//	System.out.println(a + " matched with " + x);
-						r += x +" "; 
-				//		System.out.println("Result " + r);
+						System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + target + "-");
+						res.append(x +" "); 
+					//	System.out.println("Result " + res.toString());
 						//find out whether to use i or minSize
 						singlyCount++; 
-						return findChain(x, END, r, i);
+						doublyCount++; 
+						return findChain(x, END, res, minSize);
+						//if we ever cant find anything, should we go back a word? linked list?
 					}
 				}
 			}
@@ -112,13 +110,23 @@ public class JoinedUpWriting{
 	}
 	
 	//The common part is at least half as long as both of the words
-	public static String doublyJoined(String a, String b, ArrayList<String> dict){
+	public static String doublyJoined(String a, String b){
 		int minCommonLength = (a.length()+b.length())/2;
+		//the class wont work! needs to be common on both sides!
 		StringBuilder result = new StringBuilder(); 
+		StringBuilder chainBuilder = new StringBuilder(); 
+		String chain = findChain(a, b, chainBuilder, minCommonLength); 
 		
-		//append number of doubly joined words (at least 2) 
-		
-		return result.toString(); 
+		if(chain.equals("INVALID")){
+			return "0";
+		}else{
+			result.append("DOUBLY ");
+			result.append(doublyCount + " ");
+			result.append(a + " ");
+			result.append(chain);
+			result.append(b);
+			return result.toString(); 
+		}
 	}
 	
 	
