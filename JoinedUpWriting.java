@@ -19,6 +19,7 @@ public class JoinedUpWriting{
 	public static ArrayList<String> dict;
 	public static int singlyCount;
 	public static int doublyCount;
+	public static final String NOTFOUND = "INVALID";
 	
 	public static void main(String[]args){
 		Scanner sc = new Scanner(System.in);
@@ -30,7 +31,7 @@ public class JoinedUpWriting{
 				dict.add(sc.next());
 			}
 			System.out.println(singlyJoined(a, b));
-			//System.out.println(doublyJoined(a, b));
+			System.out.println(doublyJoined(a, b));
 		}
 		sc.close(); 
 	}
@@ -43,7 +44,7 @@ public class JoinedUpWriting{
 		String chain = findSingleChain(a, b, chainBuilder); 
 		
 		if(chain.equals("INVALID")){
-			return "0";
+			return "SINGLY 0";
 		}else{
 			result.append("SINGLY ");
 			result.append(singlyCount + " ");
@@ -59,7 +60,6 @@ public class JoinedUpWriting{
 		String xTarget;
 		String target; 
 		String endTarget;
-		String notFound = "INVALID";
 		int minSize;
 		
 		//if we have looked through the whole dict, stop. 
@@ -80,31 +80,22 @@ public class JoinedUpWriting{
 		
 		//seeing different lengths of common part - OR should I count down?
 		
-
-		
-		
 		//two seperate for loops for checking if target equals? 
 		minSize = Math.min(a.length(), END.length())/2; 
 		//to the end of the smaller word
 		for(int i=minSize; i< Math.min(a.length(), END.length()); i++){
 			System.out.println("Min size is " + i);
-			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) 
+			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) suffix
 			System.out.println("Target is " + target);
 			
 			endTarget = (i >= END.length()) ? END : END.substring(0, i); //is this necessary 
 			
-			if(target.equals(endTarget)){
+			if(target.equals(endTarget)){//suffix == prefix
 				System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
-			//	System.out.println("Result " + res);
-				singlyCount= singlyCount + 2; //first is matched to second 
-			//	doublyCount= doublyCount + 2;
-				//	System.out.println("Count " + singlyCount);
+				singlyCount= singlyCount + 2; //first word is matched to last word
 				return res.toString();  //a = b; stopping case 
 			}
 		}
-		//		System.out.println("...still searching...");
-				
-		
 		for(String x : dict){
 			//for loop for each length of each word
 			minSize = Math.min(a.length(), x.length())/2; 
@@ -119,29 +110,23 @@ public class JoinedUpWriting{
 				if(target.equals(xTarget)){ //then these two words are singly joined 
 					System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + target + "-");
 					res.append(x +" "); 
-				//	System.out.println("Result " + res.toString());
-					//find out whether to use i or minSize
 					singlyCount++; 
 					return findSingleChain(x, END, res);
-					//if we ever cant find anything, should we go back a word? linked list?
 				}
 			}
 		}
-		return notFound; 
+		return NOTFOUND; 
 	}
 	
 	//The common part is at least half as long as both of the words
 	public static String doublyJoined(String a, String b){
-		int minCommonLength = (a.length()+b.length())/2;
-		//the class wont work! needs to be common on both sides!
 		StringBuilder result = new StringBuilder(); 
 		StringBuilder chainBuilder = new StringBuilder();
-		String intermediate = "";
-		//pass an intermediate string
-		String chain = findDoubleChain(a, b, intermediate, chainBuilder, minCommonLength); 
+		String intermediate = ""; //pass an intermediate string
+		String chain = findDoubleChain(a, b, intermediate, chainBuilder); 
 		
 		if(chain.equals("INVALID")){
-			return "0";
+			return "DOUBLY 0";
 		}else{
 			result.append("DOUBLY ");
 			result.append(doublyCount + " ");
@@ -152,49 +137,47 @@ public class JoinedUpWriting{
 		}
 	}
 	
-	public static String findDoubleChain(String a, String END, String intermediate, StringBuilder res, int minSize){
+	public static String findDoubleChain(String a, String END, String intermediate, StringBuilder res){
 		String xTarget;
 		String target; 
 		String endTarget;
+		int minSize; 
 		
-		System.out.println("Min size is " + minSize);
-		//seeing different lengths of common part - OR should I count down?
-		for(int i=minSize; i< a.length(); i++){
-			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) 
+		minSize = (a.length()+END.length())/2; //doubly
+		//minSize = Math.min(a.length(), END.length())/2; - singly
+		for(int i=minSize; i< Math.min(a.length(), END.length()); i++){
+			System.out.println("Min size is " + i);
+			
+			target = a.substring(a.length()-i, a.length());
 			System.out.println("Target is " + target);
 			
 			endTarget = (i >= END.length()) ? END : END.substring(0, i); 
 			if(target.equals(endTarget)){
 				System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
-			//	System.out.println("Result " + res);
-				singlyCount= singlyCount + 2; //first is matched to second 
 				doublyCount= doublyCount + 2;
-				//	System.out.println("Count " + singlyCount);
 				return res.toString();  //a = b; stopping case 
-			}else{
-		//		System.out.println("...still searching...");
+			}
+		}
+			
+		for(String x : dict){
+			minSize = (a.length()+x.length())/2; //doubly
+		//	minSize = Math.min(a.length(), x.length())/2; singly 
+			for(int i=minSize; i< Math.min(a.length(), x.length()); i++){
+				System.out.println("Min size is " + i);
 				
-				for(String x : dict){
-					xTarget = (i >= x.length()) ? x : x.substring(0, i); 
-					
-					if(target.equals(xTarget)){ //then these two words are singly joined 
-						System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + target + "-");
-						res.append(x +" "); 
-					//	System.out.println("Result " + res.toString());
-						//find out whether to use i or minSize
-						singlyCount++; 
-						doublyCount++; 
-						return findDoubleChain(x, END, intermediate, res, minSize);
-						//if we ever cant find anything, should we go back a word? linked list?
-					}
+				target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) 
+				System.out.println("Target is " + target);
+				
+				xTarget = (i >= x.length()) ? x : x.substring(0, i); 
+				
+				if(target.equals(xTarget)){ //then these two words are singly joined 
+					System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + target + "-");
+					res.append(x +" "); 
+					doublyCount++; 
+					return findDoubleChain(x, END, intermediate, res);
 				}
 			}
 		}
-		String notFound = "INVALID";
-		return notFound; 
+		return NOTFOUND;  
 	}
-	
-	
-	
-	
 }
