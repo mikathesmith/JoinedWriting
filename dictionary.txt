@@ -1,6 +1,6 @@
-fixture
+fixtture
+fixage
+ire
+ardent
 agent
 entire
-ire
-fixage
-ardent
