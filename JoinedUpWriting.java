@@ -134,57 +134,69 @@ public class JoinedUpWriting{
 		String endTarget;
 		String prefixTarget; 
 		String suffixTarget; 
-		int minSize; 
+		int commonPartSize; 
 		
 		//STOPPING CASE
 		//minSize = a.length()/2
-		minSize = (Math.min(a.length(), END.length()))/2; //IS THIS CORRECT!!?
+		commonPartSize = a.length()/2; //IS THIS CORRECT!!?
 		
 		//change what i goes up to?  - NOT COMING BACK IN THIS LOOP WHEN 
 		//FOUND ENTIRE TO COMPARE TO IRE??? 
-		
+		//commonPartSize = (Math.max(a.length()/2, END.length()/2));
 		//THIS IS THE FIRST THING THAT SHOULD BE CHECKED
-		for(int i=minSize; i<= Math.min(a.length(), END.length()); i++){
+		for(int i=commonPartSize; i<= Math.min(a.length(), END.length()); i++){
 			target = a.substring(a.length()-i, a.length());
 			System.out.println("\nIS CHAIN COMPLETE?... Comparing " + a + " with " + END + " using target " + target);
 			
 			//System.out.println("Min size is " + i);
-			
 		
 			//System.out.println("Target is " + target);
 			
 			//endTarget = (i >= END.length()) ? END : END.substring(0, i); 
 			endTarget = END.substring(0, i);
 			
+			System.out.println("Is " + target + " greater than half of " + a);
 			if(i >= (END.length()/2)){
+				System.out.println("YES");
 				if(target.equals(endTarget)){
 					System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
 					doublyCount= doublyCount + 2;
 					return res.toString();  //a = b; stopping case 
 				}
 			}else{
-				System.out.println("CHAIN UNFINISHED: common part too small");
+				System.out.println("NO");
 			}
 		}
+		System.out.println("\nSTILL BUILDING CHAIN\n");
 			
 		for(String x : dict){ //look for word to pair - A Y X
-			
-			minSize = (a.length())/2; //if a has 6 letters, minsize of common part is 3
-			
+			if(a.equals(x)){
+				continue;
+			}
+			commonPartSize = a.length()/2;
+			//minSize = (a.length())/2; //if a has 6 letters, minsize of common part is 3
+			//commonPartSize = (Math.max(a.length()/2, END.length()/2));
 			//if same word, dont bother checking?? 
 			
-			for(int i=minSize; i< Math.min(a.length(), x.length());i++){
+			
+			//need to check if the whole word is being used - eg fixture should not be used to join suffix and agent
+			//maybe if we've chosen a wrong one, we can go back a step??
+			
+			
+			//too make more efficient, only go into this for loop if x and a share common letters? 
+			for(int i=commonPartSize; i<= Math.min(a.length(), x.length());i++){
 				
 				//look for a word whose prefix == a's suffix 
 				prefixTarget = a.substring(a.length()-i, a.length()); //In total!! thi
 				System.out.println("Comparing \"" + a + "\" with \"" + x + "\" with target " + prefixTarget);
 				xPrefix = x.substring(0, i);
 				
-				
 				//if the minSize is greater or equal to half of x - fix should not match fixture
-				if(i >= (x.length()/2)){ //if x is 5 letters, this is true. 
+				System.out.println("Is " + xPrefix + " greater than half of " + x + " with " + x.length());
+				if(i >= ((x.length()/2))){ //if x is 5 letters, this is true. 
 					//System.out.println("The common part is size " + i + " and is at least half of word " + x);
 					//size of common part must be equal or greater than the length/2
+					System.out.println("YES");
 					if(prefixTarget.equals(xPrefix)){
 						System.out.println("\"" + a + "\" matched with \"" + x + "\" through common part -" + prefixTarget + "-");
 						res.append(x + " "); 
@@ -192,53 +204,20 @@ public class JoinedUpWriting{
 						return findDoubleChain(x, END, prefixTarget, res);
 					}
 				}else{
-					System.out.println("Common part too small");
+					System.out.println("NO");
 				}
+				System.out.println();
 			}
 		}
 			
 			//minSize is of the common part, not the length of the word. 
 			//the suffix/prefix of the next word needs to be at least half as long
 			//as the word itself as well as the word we are comparing to. 
-			
-			//minSize = 2; 
 
 			//for every word in the dictionary, pair it with A and find 
 			//another word Y which is at least minSize long and has its prefix
 			//matching the suffix of A, and its suffix matching the prefix of X
-			
-			//need to look at varying lengths
-			
-			//these are WRONG ! 5 in total not 5 per pre/suffix
-				//minsize is too large? 
-			
-			//need another for loop changing minSize, need to keep track 
-			//that if suffix is 1, prefix is 4 
-			
-			//Go back if the chain ends. 
-			
-		/*	for(String y : dict){ //Look for intermediate words 
-				
-				if(y.length()>=minSize){ //the word does not need to be bigger than minSize! 
-					//once inside here, need to vary the prefix/suffix lengths 
-					
-					//if yprefix matches prefixTarget
-						//check if suffix matches suffixTarget
-					System.out.println(y + " is larger than " + minSize);
-					yPrefix = y.substring(0, minSize); 
-					ySuffix = y.substring((y.length()-minSize), y.length()); 
-					
-					if((yPrefix == prefixTarget) && (ySuffix == suffixTarget)){
-						
-						System.out.println("\"" + a + "\" matched with \"" + x + "\" through intermediate -" + y + "-");
-						res.append(y +" " + x + " "); 
-						doublyCount++; 
-						return findDoubleChain(x, END, y, res);//y or x becomes a???
-							
-					}
-				}
-			}*/ 
-			
+
 		return NOTFOUND;  
 	}
 }
