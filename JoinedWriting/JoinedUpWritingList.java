@@ -1,5 +1,8 @@
+package JoinedWriting; 
 import java.util.*;
 import java.io.*; 
+
+
 
 /*
  * Etude 7: Joined Up Writing 
@@ -15,47 +18,20 @@ import java.io.*;
  * joined up words that link a beginning word to an end word. 
  */
 
-
-
 public class JoinedUpWritingList{
-	
-	public static class Node {
-		   String data;
-		   ArrayList<String> alternativeMatches = new ArrayList<String>(); 
-		   ArrayList<String> ignoreList = new ArrayList<String>(); 
-		   Node next;
-		   int numAlternatives; 
-		   
-		   public Node(){
-			   data = null; 
-			   numAlternatives = 0; 
-		   }
-		   public Node(String data){
-			   this.data = data; 
-			   numAlternatives = 0; 
-		   }
-		   
-		   public Node(String data, int numAlternatives){
-			   this.data = data; 
-			   this.numAlternatives = numAlternatives; 
-		   }
-		   
-		   public Node(String data, int numAlternatives, ArrayList<String> alternativeMatches){
-			   this.data = data; 
-			   this.numAlternatives = numAlternatives;
-			   this.alternativeMatches = alternativeMatches; 
-		   }
-	}
+
 	
 	public static ArrayList<String> dict;
 	public static int singlyCount;
 	public static int doublyCount;
 	public static final String NOTFOUND = "INVALID";
-	public static Node head; 
+	public static LinkedList chain; 
 	public static Boolean backOneStep;
 	public static String ignore; 
 	
 	public static void main(String[]args){
+
+		chain = new LinkedList(); 
 		Scanner sc = new Scanner(System.in);
 		while(sc.hasNextLine()){
 			String a = args[0];
@@ -74,15 +50,14 @@ public class JoinedUpWritingList{
 	public static String singlyJoined(String a, String b){
 		StringBuilder result = new StringBuilder(); 
 		StringBuilder chainBuilder = new StringBuilder(); 
-		String chain = findSingleChain(a, b, chainBuilder); 
+		String completeChain = findSingleChain(a, b, chainBuilder); 
 		
-		if(chain.equals("INVALID")){
+		if(completeChain.equals("INVALID")){
 			return "0";
 		}else{
-		//	result.append("SINGLY ");
 			result.append(singlyCount + " ");
 			result.append(a + " ");
-			result.append(chain);
+			result.append(completeChain);
 			result.append(b);
 			return result.toString(); 
 		}
@@ -103,10 +78,10 @@ public class JoinedUpWritingList{
 			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) suffix
 		//	System.out.println("Target is " + target);
 			
-			endTarget = (i >= END.length()) ? END : END.substring(0, i); //is this necessary 
+			endTarget = END.substring(0, i); 
 			
-			if(target.equals(endTarget)){//suffix == prefix
-			//	System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
+			if(target.equals(endTarget)&& target.length()>0){//suffix == prefix
+			//System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
 				singlyCount= singlyCount + 2; //first word is matched to last word
 				return res.toString();  //a = b; stopping case 
 			}
@@ -118,13 +93,11 @@ public class JoinedUpWritingList{
 			minSize = Math.min(a.length(), x.length())/2; 
 			//minsize changes with every word pair
 			for(int i=minSize; i < Math.min(a.length(), x.length()); i++){
-			//	System.out.println("Min size is " + i);
-				target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) 
-			//	System.out.println("Target is " + target);
+				target = a.substring(a.length()-i, a.length()); 
 				
-				xTarget = (i >= x.length()) ? x : x.substring(0, i);  //is this necessary?
+				xTarget = x.substring(0, i);  
 				
-				if(target.equals(xTarget)){ //Found a pair - these two words are singly joined 
+				if(target.equals(xTarget) && target.length()>0){ //Found a pair - these two words are singly joined 
 			//		System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + target + "-");
 					res.append(x +" "); //append the word to the resulting chain
 					singlyCount++; 
@@ -140,138 +113,23 @@ public class JoinedUpWritingList{
 		return NOTFOUND; 
 	}
 	
-	public static void appendNode(String data){
-		if(head==null){ //No head exists so we create one
-			head = new Node(data);
-			return;
-		}
-		Node current = head; //pointer that starts at head of linked list
-		while(current.next!=null){ //go through list
-			current = current.next;
-		}
-		current.next= new Node(data);
-	}
 	
-	public static void appendNode(String data, int numMatches, ArrayList<String> alternativeMatches){
-		if(head==null){ //No head exists so we create one
-			head = new Node(data, numMatches, alternativeMatches);
-	//		System.out.println("Added node " + head.data);
-			return;
-		}
-		Node current = head; //pointer that starts at head of linked list
-		while(current.next!=null){ //go through list
-			current = current.next;
-		}
-		current.next= new Node(data, numMatches, alternativeMatches);
-//		System.out.println("Added node "  + current.next.data);
-	}
-	
-	
-	public static void replaceValue(String oldData, String newData){
-		if(head == null) return;
-		
-		if(head.data == oldData){ //if we need to delete the head
-			head.data = newData; 
-			return;
-		}
-		//walk though linked list and stop one 
-		//before the element we want to delete
-		Node curr = head;
-		while(curr.next !=null){
-			//if we've found a node which 
-			//matches the one we want to delete
-			if(curr.next.data == oldData){//cut out next value
-			//	System.out.println("Replacing "+ oldData + " with " + newData);
-				curr.next.data = newData; 
-				return;
-				//walk around the element.
-			}
-			curr = curr.next; //continue walking
-		}
-	}
-	
-	public static int getNumMatches(String data){
-		if(head == null) return -1;
-		
-		if(head.data == data){
-			return head.numAlternatives;
-		}
-		//walk though linked list and stop one 
-		//before the element we want to delete
-		Node curr = head;
-		while(curr.next !=null){
-			//if we've found a node which 
-			//matches the one we want to delete
-			if(curr.next.data ==data){//cut out next value
-				return curr.next.numAlternatives; 
-				//walk around the element.
-			}
-			curr = curr.next; //continue walking
-		}
-		return -1; 
-	}
-	
-	public static void addToIgnore(Node n, String data){
-		if(head == n){
-			head.ignoreList.add(data);
-		}
-		//walk though linked list and stop one 
-		//before the element we want to delete
-		Node curr = head;
-		while(curr.next !=null){
-			//if we've found a node which 
-			//matches the one we want to delete
-			if(curr.next == n){//cut out next value
-				curr.next.ignoreList.add(data);
-				//walk around the element.
-			}
-			curr = curr.next; //continue walking
-		}
-	}
-	
-	public static Node getCurrentNode(){
-		//walk though linked list and stop one 
-		//before the element we want to delete
-		Node current = head;
-		while(current.next!=null){ //go through list
-			current = current.next;
-		}
-		return current; //should return head if there is only the head  
-	}
-	
-	public static String printNodes(){
-		StringBuilder sb = new StringBuilder(); 
-		if(head != null){ 
-	        Node current = head; 
-	        while(current != null){
-	            sb.append(current.data + " ");
-	            current = current.next;
-	        }
-		}
-		return sb.toString();
-	}
 	
 	//The common part is at least half as long as both of the words
 	public static String doublyJoined(String a, String b){
 		StringBuilder result = new StringBuilder(); 
 		StringBuilder chainBuilder = new StringBuilder();
-		String previous = ""; //pass an intermediate string
+		String previous = ""; 
 		backOneStep = false; 
-	//	Node head = null; 
-		appendNode(a);
+		chain.appendNode(a);
 		
-		String chain = findDoubleChain(a, b, previous, chainBuilder); 
 		
-		if(chain.equals("INVALID")){
+		String completeChain = findDoubleChain(a, b, previous, chainBuilder); 
+		
+		if(completeChain.equals("INVALID")){
 			return "0";
 		}else{
-			//result.append("DOUBLY ");
-			//result.append(doublyCount + " ");
-			//result.append(a + " ");
-		//	result.append(chain);
-		//	result.append(b);
-			//return result.toString(); 
-			return doublyCount + " " + printNodes();
+			return doublyCount + " " + chain.printNodes();
 		}
 	}
 	
@@ -279,13 +137,11 @@ public class JoinedUpWritingList{
 	//the starting word to END 
 	public static String findDoubleChain(String a, String END, String prev, StringBuilder res){
 		String xPrefix; 
-		String ySuffix;
 		String target; 
 		String endTarget;
 		String prefixTarget; 
-		String suffixTarget; 
 		int commonPartSize = a.length()/2; 
-		Node thisNode = getCurrentNode();
+		//Node thisNode = chain.getCurrentNode();
 		int numMatches = 0;
 		String thisMatch = "";
 		ArrayList<String> otherOptions = new ArrayList<String>(); 
@@ -300,8 +156,8 @@ public class JoinedUpWritingList{
 				if(target.equals(endTarget)){
 			//		System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
 					doublyCount= doublyCount + 2;
-					appendNode(END);
-					return res.toString();  //a = b; stopping case 
+					chain.appendNode(END);
+					return chain.printNodes();  //a = b; stopping case 
 				}
 			}
 
@@ -313,14 +169,14 @@ public class JoinedUpWritingList{
 			}
 			
 			if(backOneStep){ //If we are backtracking
-				if(! thisNode.alternativeMatches.contains(x)){
+				if(! chain.getCurrentNode().alternativeMatches.contains(x)){
 				//	System.out.println("Word not an option");
 					continue NEXT_WORD;
 				}
 			}
 			
 			//For every string in the ignore list of thisNode
-			for(String y : thisNode.ignoreList){
+			for(String y : chain.getCurrentNode().ignoreList){
 				if(x.equals(y)){
 				//	System.out.println("Ignore this word " + y);
 					continue NEXT_WORD;
@@ -366,10 +222,10 @@ public class JoinedUpWritingList{
 		//There was a match! 
 		if(!thisMatch.equals("")){
 			if(backOneStep){ //We are recovering from reverse
-				replaceValue(prev, thisMatch); //If we replace rather than delete, we can keep ignore list and other info
+				chain.replaceValue(prev, thisMatch); //If we replace rather than delete, we can keep ignore list and other info
 				backOneStep = false; 
 			}else{
-				appendNode(thisMatch, numMatches, otherOptions);
+				chain.appendNode(thisMatch, numMatches, otherOptions);
 				doublyCount++; 
 			}
 			res.append(thisMatch + " "); 
@@ -380,10 +236,10 @@ public class JoinedUpWritingList{
 		if(doublyCount > 0){ //If we have added at least one word to the chain
 			
 			//look at numMatches of previous node. if more than one, then we examine
-			int previousAlternatives = getNumMatches(a); 
+			int previousAlternatives = chain.getNumMatches(a); 
 			if(previousAlternatives > 0){ //if there were other alternatives
 				backOneStep = true;
-				addToIgnore(thisNode, a); //Add this word to the ignore list for the next search to ensure we never come back here. 
+				chain.addToIgnore(chain.getCurrentNode(), a); //Add this word to the ignore list for the next search to ensure we never come back here. 
 				
 				return findDoubleChain(prev, END, a, res);
 			}
