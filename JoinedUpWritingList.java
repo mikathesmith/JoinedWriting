@@ -21,6 +21,8 @@ public class JoinedUpWritingList{
 	
 	public static class Node {
 		   String data;
+		   ArrayList<String> alternativeMatches = new ArrayList<String>(); 
+		   ArrayList<String> ignoreList = new ArrayList<String>(); 
 		   Node next;
 		   int numAlternatives; 
 		   
@@ -32,9 +34,16 @@ public class JoinedUpWritingList{
 			   this.data = data; 
 			   numAlternatives = 0; 
 		   }
+		   
 		   public Node(String data, int numAlternatives){
 			   this.data = data; 
 			   this.numAlternatives = numAlternatives; 
+		   }
+		   
+		   public Node(String data, int numAlternatives, ArrayList<String> alternativeMatches){
+			   this.data = data; 
+			   this.numAlternatives = numAlternatives;
+			   this.alternativeMatches = alternativeMatches; 
 		   }
 	}
 	
@@ -143,23 +152,26 @@ public class JoinedUpWritingList{
 		current.next= new Node(data);
 	}
 	
-	public static void appendNode(String data, int numMatches){
+	public static void appendNode(String data, int numMatches, ArrayList<String> alternativeMatches){
 		if(head==null){ //No head exists so we create one
-			head = new Node(data, numMatches);
+			head = new Node(data, numMatches, alternativeMatches);
+	//		System.out.println("Added node " + head.data);
 			return;
 		}
 		Node current = head; //pointer that starts at head of linked list
 		while(current.next!=null){ //go through list
 			current = current.next;
 		}
-		current.next= new Node(data, numMatches);
+		current.next= new Node(data, numMatches, alternativeMatches);
+//		System.out.println("Added node "  + current.next.data);
 	}
 	
-	public static void deleteWithValue(String data){
+	
+	public static void replaceValue(String oldData, String newData){
 		if(head == null) return;
 		
-		if(head.data == data){ //if we need to delete the head
-			head = head.next; //walk around it
+		if(head.data == oldData){ //if we need to delete the head
+			head.data = newData; 
 			return;
 		}
 		//walk though linked list and stop one 
@@ -168,8 +180,9 @@ public class JoinedUpWritingList{
 		while(curr.next !=null){
 			//if we've found a node which 
 			//matches the one we want to delete
-			if(curr.next.data ==data){//cut out next value
-				curr.next = curr.next.next; 
+			if(curr.next.data == oldData){//cut out next value
+			//	System.out.println("Replacing "+ oldData + " with " + newData);
+				curr.next.data = newData; 
 				return;
 				//walk around the element.
 			}
@@ -196,6 +209,34 @@ public class JoinedUpWritingList{
 			curr = curr.next; //continue walking
 		}
 		return -1; 
+	}
+	
+	public static void addToIgnore(Node n, String data){
+		if(head == n){
+			head.ignoreList.add(data);
+		}
+		//walk though linked list and stop one 
+		//before the element we want to delete
+		Node curr = head;
+		while(curr.next !=null){
+			//if we've found a node which 
+			//matches the one we want to delete
+			if(curr.next == n){//cut out next value
+				curr.next.ignoreList.add(data);
+				//walk around the element.
+			}
+			curr = curr.next; //continue walking
+		}
+	}
+	
+	public static Node getCurrentNode(){
+		//walk though linked list and stop one 
+		//before the element we want to delete
+		Node current = head;
+		while(current.next!=null){ //go through list
+			current = current.next;
+		}
+		return current; //should return head if there is only the head  
 	}
 	
 	public static String printNodes(){
@@ -243,59 +284,47 @@ public class JoinedUpWritingList{
 		String endTarget;
 		String prefixTarget; 
 		String suffixTarget; 
-		int commonPartSize; 
-		
+		int commonPartSize = a.length()/2; 
+		Node thisNode = getCurrentNode();
+		int numMatches = 0;
+		String thisMatch = "";
+		ArrayList<String> otherOptions = new ArrayList<String>(); 
 	
-		
-		
-		//STOPPING CASE
-		//minSize = a.length()/2
-		commonPartSize = a.length()/2; //IS THIS CORRECT!!?
-		
-		//change what i goes up to?  - NOT COMING BACK IN THIS LOOP WHEN 
-		//FOUND ENTIRE TO COMPARE TO IRE??? 
-		//commonPartSize = (Math.max(a.length()/2, END.length()/2));
-		//THIS IS THE FIRST THING THAT SHOULD BE CHECKED
 		for(int i=commonPartSize; i<= Math.min(a.length(), END.length()); i++){
 			target = a.substring(a.length()-i, a.length());
 	//		System.out.println("\nIS CHAIN COMPLETE?... Comparing " + a + " with " + END + " using target " + target);
 			
-			//System.out.println("Min size is " + i);
-		
-			//System.out.println("Target is " + target);
-			
-			//endTarget = (i >= END.length()) ? END : END.substring(0, i); 
 			endTarget = END.substring(0, i);
 			
-			//System.out.println("Is " + target + " greater than half of " + a);
 			if(i >= (END.length()/2)){
-		//		System.out.println("YES");
 				if(target.equals(endTarget)){
 			//		System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
 					doublyCount= doublyCount + 2;
 					appendNode(END);
 					return res.toString();  //a = b; stopping case 
 				}
-			}else{
-	//			System.out.println("NO");
 			}
 
 		}
-		//check that x contains the intermediate??
 		
-	//	System.out.println("\nSTILL BUILDING CHAIN\n");
-		
-		int numMatches = 0;
-		String thisMatch = "";
-		
-		
-		for(String x : dict){ //look for word to pair - A Y X
-			if(a.equals(x)){
+		NEXT_WORD: for(String x : dict){
+			if(a.equals(x)){ //If same word, dont need to check
 				continue;
 			}
-			if(x.equals(ignore)){
-				//System.out.println("Found the other match! IGNORE!");
-				continue; 
+			
+			if(backOneStep){ //If we are backtracking
+				if(! thisNode.alternativeMatches.contains(x)){
+				//	System.out.println("Word not an option");
+					continue NEXT_WORD;
+				}
+			}
+			
+			//For every string in the ignore list of thisNode
+			for(String y : thisNode.ignoreList){
+				if(x.equals(y)){
+				//	System.out.println("Ignore this word " + y);
+					continue NEXT_WORD;
+				}
 			}
 			
 		/*	String check = "";
@@ -303,43 +332,31 @@ public class JoinedUpWritingList{
 			check += a; */
 		//	System.out.println("Does " + x + " fit in  intermediate containing " + check);
 			
-			commonPartSize = a.length()/2;
-			//minSize = (a.length())/2; //if a has 6 letters, minsize of common part is 3
-			//commonPartSize = (Math.max(a.length()/2, END.length()/2));
-			//if same word, dont bother checking?? 
-			
-			
-			//need to check if the whole word is being used - eg fixture should not be used to join suffix and agent
-			//maybe if we've chosen a wrong one, we can go back a step??
-			
-			
-			//too make more efficient, only go into this for loop if x and a share common letters? 
+			//TODO: to make more efficient, only go into this for loop if x and a share common letters? 
 			for(int i=commonPartSize; i<= Math.min(a.length(), x.length());i++){
 
 				//look for a word whose prefix == a's suffix 
-				prefixTarget = a.substring(a.length()-i, a.length()); //In total!! thi
+				prefixTarget = a.substring(a.length()-i, a.length());
 		//		System.out.println("Comparing \"" + a + "\" with \"" + x + "\" with target " + prefixTarget);
 				xPrefix = x.substring(0, i);
 				
-				//if the minSize is greater or equal to half of x - fix should not match fixture
-			//	System.out.println("Is " + xPrefix + " greater than half of " + x + " with " + x.length());
+				//if the minSize is greater or equal to half of x 
 				if(i >= ((x.length()/2))){ //if x is 5 letters, this is true. 
 					//System.out.println("The common part is size " + i + " and is at least half of word " + x);
-					//size of common part must be equal or greater than the length/2
-			//		System.out.println("YES");
-					
-					
+			
 					//if backOneStep is true, this means we just came backwards. 
-					//need to be careful! 
 					if(prefixTarget.equals(xPrefix)){
-					//	System.out.println("\"" + a + "\" matched with \"" + x + "\" through common part -" + prefixTarget + "-");
+				//		System.out.println("\"" + a + "\" matched with \"" + x + "\" through common part -" + prefixTarget + "-");
 						
 						if(thisMatch.equals("")){ //only first time enter this loop. 
 							thisMatch = x; 
-						//	System.out.println("First match was " + thisMatch);
+							//System.out.println("First match was " + thisMatch);
 						}else{
-							numMatches++; //other words that matched  
+							otherOptions.add(x);
+							//System.out.println("Added " + x + " to other options");
+							numMatches++; //Other words that matched the suffix
 						}
+				
 						continue; //break out of this loop
 					}
 				}
@@ -348,48 +365,28 @@ public class JoinedUpWritingList{
 		
 		//There was a match! 
 		if(!thisMatch.equals("")){
+			if(backOneStep){ //We are recovering from reverse
+				replaceValue(prev, thisMatch); //If we replace rather than delete, we can keep ignore list and other info
+				backOneStep = false; 
+			}else{
+				appendNode(thisMatch, numMatches, otherOptions);
+				doublyCount++; 
+			}
 			res.append(thisMatch + " "); 
-			appendNode(thisMatch, numMatches);
-			doublyCount++; 
-		//	printNodes(); 
-			//x needs to be contained in a and the next one
 			return findDoubleChain(thisMatch, END, a, res);
 		}
 		
-		
-	//	System.out.println("DEAD END");
-		
-		//whats the case we dont keep going back??
-		if(doublyCount > 0){ //have added to chain - need to make sure we dont get stuck 
-			//go back a step? skip a word 
-			 
+		//System.out.println(a + " was a DEAD END - add to ignore list");
+		if(doublyCount > 0){ //If we have added at least one word to the chain
 			
-			//look at numMatches of previous node. if more than one, then 
-			//we examine 
-			
+			//look at numMatches of previous node. if more than one, then we examine
 			int previousAlternatives = getNumMatches(a); 
-	//		System.out.println("There were " + previousAlternatives + " previous alternatives");
-		
 			if(previousAlternatives > 0){ //if there were other alternatives
-			//	System.out.println("GOING BACK A STEP");
 				backOneStep = true;
-				ignore = a; 
-				//System.out.println("Ignore " + ignore + " the next search.");
-				doublyCount--; 
-				deleteWithValue(a); 
-				printNodes(); 
+				addToIgnore(thisNode, a); //Add this word to the ignore list for the next search to ensure we never come back here. 
 				
-				//need to mark that we never go back to a! 
-
-				//Y is the node before a
-				return findDoubleChain(prev, END, "", res);
-				
-			}else{
-				return NOTFOUND; 
+				return findDoubleChain(prev, END, a, res);
 			}
-			//add to pairs that dont work?? whenever we see the 
-			//pair, we continue??
-			
 		}
 			
 			//minSize is of the common part, not the length of the word. 
@@ -399,7 +396,6 @@ public class JoinedUpWritingList{
 			//for every word in the dictionary, pair it with A and find 
 			//another word Y which is at least minSize long and has its prefix
 			//matching the suffix of A, and its suffix matching the prefix of X
-
 		return NOTFOUND;  
 	}
 }

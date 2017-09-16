@@ -65,14 +65,22 @@ public class JoinedUpWriting{
 		minSize = Math.min(a.length(), END.length())/2; 
 		//STOPPING CASE - if a word whose suffix is a prefix of END, stop. 
 		for(int i=minSize; i< Math.min(a.length(), END.length()); i++){
-		//	System.out.println("Min size is " + i);
+			
+			
 			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) suffix
-		//	System.out.println("Target is " + target);
+		
+		//	System.out.println("target is " + target);
+			endTarget = END.substring(0, i);
+		//	System.out.println("end target is " + endTarget);
 			
-			endTarget = (i >= END.length()) ? END : END.substring(0, i); //is this necessary 
+			//MATCHING B??
+		//	endTarget = (i >= END.length()) ? END : END.substring(0, i); //is this necessary 
 			
+			
+			//TODO: this does not work for strings of size 1! it is matching
+			//a blank to a blank therefore matching "b" with "read" 
 			if(target.equals(endTarget)){//suffix == prefix
-			//	System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
+				System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
 				singlyCount= singlyCount + 2; //first word is matched to last word
 				return res.toString();  //a = b; stopping case 
 			}
@@ -184,7 +192,7 @@ public class JoinedUpWriting{
 			String check = "";
 			check += prev;
 			check += a; 
-			System.out.println("Does " + x + " fit in  intermediate containing " + check);
+			//System.out.println("Does " + x + " fit in  intermediate containing " + check);
 			
 			commonPartSize = a.length()/2;
 			//minSize = (a.length())/2; //if a has 6 letters, minsize of common part is 3
