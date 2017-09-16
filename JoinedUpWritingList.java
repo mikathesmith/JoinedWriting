@@ -15,11 +15,36 @@ import java.io.*;
  * joined up words that link a beginning word to an end word. 
  */
 
-public class JoinedUpWriting{
+
+
+public class JoinedUpWritingList{
+	
+	public static class Node {
+		   String data;
+		   Node next;
+		   int numAlternatives; 
+		   
+		   public Node(){
+			   data = null; 
+			   numAlternatives = 0; 
+		   }
+		   public Node(String data){
+			   this.data = data; 
+			   numAlternatives = 0; 
+		   }
+		   public Node(String data, int numAlternatives){
+			   this.data = data; 
+			   this.numAlternatives = numAlternatives; 
+		   }
+	}
+	
 	public static ArrayList<String> dict;
 	public static int singlyCount;
 	public static int doublyCount;
 	public static final String NOTFOUND = "INVALID";
+	public static Node head; 
+	public static Boolean backOneStep;
+	public static String ignore; 
 	
 	public static void main(String[]args){
 		Scanner sc = new Scanner(System.in);
@@ -103,28 +128,109 @@ public class JoinedUpWriting{
 			
 		}//If we have looked through the whole dictionary, stop and return invalid. 
 		
-	
-		
-		
 		return NOTFOUND; 
+	}
+	
+	public static void appendNode(String data){
+		if(head==null){ //No head exists so we create one
+			head = new Node(data);
+			return;
+		}
+		Node current = head; //pointer that starts at head of linked list
+		while(current.next!=null){ //go through list
+			current = current.next;
+		}
+		current.next= new Node(data);
+	}
+	
+	public static void appendNode(String data, int numMatches){
+		if(head==null){ //No head exists so we create one
+			head = new Node(data, numMatches);
+			return;
+		}
+		Node current = head; //pointer that starts at head of linked list
+		while(current.next!=null){ //go through list
+			current = current.next;
+		}
+		current.next= new Node(data, numMatches);
+	}
+	
+	public static void deleteWithValue(String data){
+		if(head == null) return;
+		
+		if(head.data == data){ //if we need to delete the head
+			head = head.next; //walk around it
+			return;
+		}
+		//walk though linked list and stop one 
+		//before the element we want to delete
+		Node curr = head;
+		while(curr.next !=null){
+			//if we've found a node which 
+			//matches the one we want to delete
+			if(curr.next.data ==data){//cut out next value
+				curr.next = curr.next.next; 
+				return;
+				//walk around the element.
+			}
+			curr = curr.next; //continue walking
+		}
+	}
+	
+	public static int getNumMatches(String data){
+		if(head == null) return -1;
+		
+		if(head.data == data){
+			return head.numAlternatives;
+		}
+		//walk though linked list and stop one 
+		//before the element we want to delete
+		Node curr = head;
+		while(curr.next !=null){
+			//if we've found a node which 
+			//matches the one we want to delete
+			if(curr.next.data ==data){//cut out next value
+				return curr.next.numAlternatives; 
+				//walk around the element.
+			}
+			curr = curr.next; //continue walking
+		}
+		return -1; 
+	}
+	
+	public static String printNodes(){
+		StringBuilder sb = new StringBuilder(); 
+		if(head != null){ 
+	        Node current = head; 
+	        while(current != null){
+	            sb.append(current.data + " ");
+	            current = current.next;
+	        }
+		}
+		return sb.toString();
 	}
 	
 	//The common part is at least half as long as both of the words
 	public static String doublyJoined(String a, String b){
 		StringBuilder result = new StringBuilder(); 
 		StringBuilder chainBuilder = new StringBuilder();
-		String intermediate = ""; //pass an intermediate string
-		String chain = findDoubleChain(a, b, intermediate, chainBuilder); 
+		String previous = ""; //pass an intermediate string
+		backOneStep = false; 
+	//	Node head = null; 
+		appendNode(a);
+		
+		String chain = findDoubleChain(a, b, previous, chainBuilder); 
 		
 		if(chain.equals("INVALID")){
 			return "0";
 		}else{
 			//result.append("DOUBLY ");
-			result.append(doublyCount + " ");
-			result.append(a + " ");
-			result.append(chain);
-			result.append(b);
-			return result.toString(); 
+			//result.append(doublyCount + " ");
+			//result.append(a + " ");
+		//	result.append(chain);
+		//	result.append(b);
+			//return result.toString(); 
+			return doublyCount + " " + printNodes();
 		}
 	}
 	
@@ -138,7 +244,9 @@ public class JoinedUpWriting{
 		String prefixTarget; 
 		String suffixTarget; 
 		int commonPartSize; 
-		Boolean skip = false; 
+		
+	
+		
 		
 		//STOPPING CASE
 		//minSize = a.length()/2
@@ -165,6 +273,7 @@ public class JoinedUpWriting{
 				if(target.equals(endTarget)){
 			//		System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
 					doublyCount= doublyCount + 2;
+					appendNode(END);
 					return res.toString();  //a = b; stopping case 
 				}
 			}else{
@@ -176,15 +285,23 @@ public class JoinedUpWriting{
 		
 	//	System.out.println("\nSTILL BUILDING CHAIN\n");
 		
+		int numMatches = 0;
+		String thisMatch = "";
+		
+		
 		for(String x : dict){ //look for word to pair - A Y X
 			if(a.equals(x)){
 				continue;
 			}
+			if(x.equals(ignore)){
+				//System.out.println("Found the other match! IGNORE!");
+				continue; 
+			}
 			
-			String check = "";
+		/*	String check = "";
 			check += prev;
-			check += a; 
-			System.out.println("Does " + x + " fit in  intermediate containing " + check);
+			check += a; */
+		//	System.out.println("Does " + x + " fit in  intermediate containing " + check);
 			
 			commonPartSize = a.length()/2;
 			//minSize = (a.length())/2; //if a has 6 letters, minsize of common part is 3
@@ -210,25 +327,68 @@ public class JoinedUpWriting{
 					//System.out.println("The common part is size " + i + " and is at least half of word " + x);
 					//size of common part must be equal or greater than the length/2
 			//		System.out.println("YES");
+					
+					
+					//if backOneStep is true, this means we just came backwards. 
+					//need to be careful! 
 					if(prefixTarget.equals(xPrefix)){
-				//		System.out.println("\"" + a + "\" matched with \"" + x + "\" through common part -" + prefixTarget + "-");
-						res.append(x + " "); 
-						doublyCount++; 
+					//	System.out.println("\"" + a + "\" matched with \"" + x + "\" through common part -" + prefixTarget + "-");
 						
-						//x needs to be contained in a and the next one
-						return findDoubleChain(x, END, a, res);
+						if(thisMatch.equals("")){ //only first time enter this loop. 
+							thisMatch = x; 
+						//	System.out.println("First match was " + thisMatch);
+						}else{
+							numMatches++; //other words that matched  
+						}
+						continue; //break out of this loop
 					}
-				}else{
-	//				System.out.println("NO");
 				}
-		//		System.out.println();
 			}
 		}
 		
-		if(doublyCount > 0){ //have added to chain
+		//There was a match! 
+		if(!thisMatch.equals("")){
+			res.append(thisMatch + " "); 
+			appendNode(thisMatch, numMatches);
+			doublyCount++; 
+		//	printNodes(); 
+			//x needs to be contained in a and the next one
+			return findDoubleChain(thisMatch, END, a, res);
+		}
+		
+		
+	//	System.out.println("DEAD END");
+		
+		//whats the case we dont keep going back??
+		if(doublyCount > 0){ //have added to chain - need to make sure we dont get stuck 
 			//go back a step? skip a word 
-			skip = true; 
-		//	return findDoubleChain();
+			 
+			
+			//look at numMatches of previous node. if more than one, then 
+			//we examine 
+			
+			int previousAlternatives = getNumMatches(a); 
+	//		System.out.println("There were " + previousAlternatives + " previous alternatives");
+		
+			if(previousAlternatives > 0){ //if there were other alternatives
+			//	System.out.println("GOING BACK A STEP");
+				backOneStep = true;
+				ignore = a; 
+				//System.out.println("Ignore " + ignore + " the next search.");
+				doublyCount--; 
+				deleteWithValue(a); 
+				printNodes(); 
+				
+				//need to mark that we never go back to a! 
+
+				//Y is the node before a
+				return findDoubleChain(prev, END, "", res);
+				
+			}else{
+				return NOTFOUND; 
+			}
+			//add to pairs that dont work?? whenever we see the 
+			//pair, we continue??
 			
 		}
 			
