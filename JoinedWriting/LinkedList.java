@@ -8,16 +8,18 @@ public class LinkedList{
 	public static Node head; 
 	
 	public static class Node {
+		   Node next;
+		   Node prev; 
 		   String data;
 		   ArrayList<String> alternativeMatches = new ArrayList<String>(); 
 		   ArrayList<String> ignoreList = new ArrayList<String>(); 
-		   Node next;
 		   int numAlternatives; 
 		   
 		   public Node(){
 			   data = null; 
 			   numAlternatives = 0; 
 		   }
+		   
 		   public Node(String data){
 			   this.data = data; 
 		   }
