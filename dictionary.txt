@@ -3,6 +3,7 @@ fixture
 ire
 ardent
 agent
-fixage
 fixate
+fixage
 entire
+help
