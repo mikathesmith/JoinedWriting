@@ -63,6 +63,7 @@ public class LinkedList{
 		for(String s : current.next.alternativeMatches){
 			System.out.print(s + " ");
 		}
+		System.out.println();
 	}
 	
 	public static void replaceData(String newData, Node curr){
