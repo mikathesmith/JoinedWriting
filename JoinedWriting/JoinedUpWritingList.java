@@ -19,6 +19,8 @@ import java.io.*;
  */
 
 public class JoinedUpWritingList{
+	
+	
 
 	
 	public static ArrayList<String> dict;
@@ -40,7 +42,7 @@ public class JoinedUpWritingList{
 			while(sc.hasNext()){
 				dict.add(sc.next());
 			}
-			System.out.println(singlyJoined(a, b));
+		//	System.out.println(singlyJoined(a, b));
 			System.out.println(doublyJoined(a, b));
 		}
 		sc.close(); 
@@ -122,8 +124,7 @@ public class JoinedUpWritingList{
 		backOneStep = false; 
 		chain.appendNode(a);
 		
-		
-		String completeChain = findDoubleChain(a, b, previous); 
+		String completeChain = findDoubleChain(chain.getCurrentNode(), b); 
 		
 		if(completeChain.equals("INVALID")){
 			return "0";
@@ -143,8 +144,214 @@ public class JoinedUpWritingList{
 		  return a + b;
 	}
 	
+	public static String findDoubleChain(LinkedList.Node curr, String END){
+		String xPrefix; 
+		String target; 
+		String endTarget;
+		String prefixTarget;
+		int numMatches = 0;
+		String thisMatch = "";
+		ArrayList<String> otherOptions = new ArrayList<String>(); 
+		
+	
+		String a = curr.data; //this may be empty 
+		int commonPartSize = a.length()/2; 
+		//Check if we are complete. - have word check 
+		
+		
+		
+		
+		for(int i=commonPartSize; i<= Math.min(a.length(), END.length()); i++){
+			target = a.substring(a.length()-i, a.length());
+			endTarget = END.substring(0, i);
+			
+			if(i >= (END.length()/2)){
+				if(target.equals(endTarget)){
+					System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
+					doublyCount= doublyCount + 2;
+					chain.appendNode(END);
+					return chain.printNodes();  //a = b; stopping case 
+				}
+			}
+		}
+		
+		if(backOneStep){ //If we are backtracking
+				//	System.out.println("\nSearching for a match for "+ a + " (came BACK from " + prev + ")");
+		/*			if(! chain.getCurrentNode().alternativeMatches.contains(x)){
+					//	System.out.println("Word not an option");
+						continue NEXT_WORD;
+					}*/ 
+			//curr = curr.prev; 
+			System.out.println("\nSearching for matches for "+ curr.prev.data + "... by looking at alternatives to " + curr.data);
+			System.out.println("CURRENT CHAIN: " + chain.printNodes() + ", where we need to replace " + curr.data + "\n");
+			
+			a = curr.prev.data; 
+			
+			System.out.println("We have backtracked"); 
+			//the node we are looking at needs to be replaced by an alternative match
+			for(String x : curr.alternativeMatches){
+				System.out.println(x + " was an alternative");
+				
+				if(curr.ignoreList.contains(x)){
+					System.out.println("We will ignore it!");
+					continue;  //skip the word if it is in the ignore list
+				}
+					//These are words only within alternativeMatches - dont add them again!
+				for(int i=commonPartSize; i<= Math.min(a.length(), x.length());i++){
+					prefixTarget = a.substring(a.length()-i, a.length());
+		//			System.out.println("Comparing \"" + a + "\" with \"" + x + "\" with target " + prefixTarget);
+					xPrefix = x.substring(0, i);
+					
+					if(i >= ((x.length()/2))){ 
+						//we just came backwards. 
+						if(prefixTarget.equals(xPrefix)){
+							thisMatch = x; 
+			//				System.out.println("MATCH was " + thisMatch);
+						//	break NEXT_WORD; 
+							System.out.println("WE ARE REPLACING " + curr.data + " WITH " + thisMatch);
+							curr.data = thisMatch; 
+							backOneStep = false; 
+
+							return findDoubleChain(curr, END);
+						}
+					}
+				}
+			}
+					//System.out.println("Couldnt find a match");
+		}else{
+			System.out.println("\nSearching for matches for "+ curr.data + "...");
+			System.out.println("CURRENT CHAIN: " + chain.printNodes() + "\n");
+	
+			NEXT_WORD: for(String x : dict){
+				if(a.equals(x)){ //If same word, dont need to check
+					continue;
+				}
+				
+				
+				//For every string in the ignore list of thisNode
+			/*	for(String y : chain.getCurrentNode().ignoreList){
+					if(x.equals(y)){
+					//	System.out.println("Ignore this word " + y);
+						continue NEXT_WORD;
+					}
+				}*/
+				
+				//If the word has already been used in the chain, dont use it again?
+				String check; 
+				if(curr.prev != null){
+					check = overlappingConcat(curr.prev.data, x); //this isnt working because when we backtrack, prev is not correct
+					//prev should be prev's prev (do in linkedlist!) 
+				//	System.out.println("Is \"" + curr.data + "\" contained in \"" + check + "\"");
+					if(! check.contains(curr.data)){
+					//	System.out.println("NO");
+						continue; 
+					}else{
+					//	System.out.println("YES");
+					}
+				}else{ //There is no previous element to compare to - we are looking at the head 
+					//System.out.println("No previous element");
+				}
+				
+				//TODO: to make more efficient, only go into this for loop if x and a share common letters? 
+				
+				//if either prev has not been initiated, or it has and the check is true
+				//could use String.startsWith or String.endsWith, or String.regionMatches
+				
+			//	if((!prev.equals("") && check.contains(a)) || (prev.equals(""))|| backOneStep){
+				//	System.out.println("YES");
+				for(int i=commonPartSize; i<= Math.min(a.length(), x.length());i++){
+	
+					//look for a word whose prefix == a's suffix 
+					prefixTarget = a.substring(a.length()-i, a.length());
+					//System.out.println("Comparing \"" + a + "\" with \"" + x + "\" with target " + prefixTarget);
+					xPrefix = x.substring(0, i);
+					
+					//if the minSize is greater or equal to half of x 
+					if(i >= ((x.length()/2))){ //if x is 5 letters, this is true. 
+						//System.out.println("The common part is size " + i + " and is at least half of word " + x);
+				
+						//if backOneStep is true, this means we just came backwards. 
+						if(prefixTarget.equals(xPrefix)){
+							System.out.println("\"" + a + "\" matched with \"" + x + "\" through common part -" + prefixTarget + "-");
+							
+							if(thisMatch.equals("")){ //only first time enter this loop. 
+								thisMatch = x; 
+								System.out.println("First match was " + thisMatch);
+							}else{
+								otherOptions.add(x); //these will be added to next node
+								System.out.println("Added " + x + " as an alternative to " + thisMatch + " to match to " + a);
+								numMatches++; //Other words that matched the suffix
+							}
+							continue; //break out of this loop
+						}
+					}
+				}
+			}
+		}
+		
+		//There was a match! 
+		if(!thisMatch.equals("")){
+			if(backOneStep){ //We are recovering from reverse
+				//chain.replaceValue(chain.getCurrentNode().prev.data, thisMatch); //If we replace rather than delete
+				//chain.replaceData(thisMatch, curr);
+				System.out.println("WE ARE REPLACING " + curr.data + " WITH " + thisMatch);
+				chain.getCurrentNode().data = thisMatch; 
+				backOneStep = false; 
+			}else{
+				//chain.getCurrentNode().alternativeMatches(otherOptions); //the alternative matches
+				//are for THIS node 
+				chain.appendNode(thisMatch, numMatches, otherOptions);
+				doublyCount++; 
+			}
+			return findDoubleChain(chain.getCurrentNode(), END);
+		}else{ //there was no match so go back a step - We have NOT added a new node. 
+			System.out.println(a + " was a DEAD END - add to ignore list and go back a step");
+			if(doublyCount > 0){ //If we have added at least one word to the chain
+				//look at numMatches of previous node. if more than one, then we examine
+				int numAlternatives = chain.getNumMatches(curr); 
+				if(numAlternatives > 0){ //if there were other alternatives
+					backOneStep = true;
+					curr.ignoreList.add(a); //should this be a queue?
+					//TODO: dont need both these lists? 
+					//chain.addToIgnore(curr, a); //Add this word to the ignore list for the next search to ensure we never come back here. 		
+					//curr.alternativeMatches.remove(a);
+					
+					//a should be prev, prev should be a's prev 
+				//	System.out.println("This node was " + a  + " and the node before " + chain.getCurrentNode().data + " was " + chain.getCurrentNode().prev.data);
+					return findDoubleChain(curr, END); //ISSUE HERE!! - need to be able to go recurisively backwards. 
+				} 
+				
+				
+				//else if(chain.getNumMatches(prev) > 0 ){
+					//chain.addToIgnore()
+					//chain.addToIgnore(chain.getCurrentNode(), prev);
+					//System.out.println("need to go back 2");
+			}
+				
+		}
+		
+	
+		
+			//minSize is of the common part, not the length of the word. 
+			//the suffix/prefix of the next word needs to be at least half as long
+			//as the word itself as well as the word we are comparing to. 
+
+			//for every word in the dictionary, pair it with A and find 
+			//another word Y which is at least minSize long and has its prefix
+			//matching the suffix of A, and its suffix matching the prefix of X
+		return NOTFOUND;  
+	}
+	
+	
+	
+	
+	
 	//This method recursively finds a chain of doubly joined strings from 
 	//the starting word to END 
+	
+	//Just use nodes? -  still need end. 
+	
+	/*
 	public static String findDoubleChain(String a, String END, String prev){
 		String xPrefix; 
 		String target; 
@@ -156,10 +363,9 @@ public class JoinedUpWritingList{
 		String thisMatch = "";
 		ArrayList<String> otherOptions = new ArrayList<String>(); 
 	
+		//Check if we are complete. - have word check 
 		for(int i=commonPartSize; i<= Math.min(a.length(), END.length()); i++){
 			target = a.substring(a.length()-i, a.length());
-	//		System.out.println("\nIS CHAIN COMPLETE?... Comparing " + a + " with " + END + " using target " + target);
-			
 			endTarget = END.substring(0, i);
 			
 			if(i >= (END.length()/2)){
@@ -172,11 +378,7 @@ public class JoinedUpWritingList{
 			}
 
 		}
-		
-		System.out.println("\nSearching for a match for "+ a + " (came from " + prev + ")");
-		
-		
-		
+	
 		
 		NEXT_WORD: for(String x : dict){
 			if(a.equals(x)){ //If same word, dont need to check
@@ -184,6 +386,7 @@ public class JoinedUpWritingList{
 			}
 			
 			if(backOneStep){ //If we are backtracking
+		//		System.out.println("\nSearching for a match for "+ a + " (came BACK from " + prev + ")");
 				if(! chain.getCurrentNode().alternativeMatches.contains(x)){
 				//	System.out.println("Word not an option");
 					continue NEXT_WORD;
@@ -192,19 +395,21 @@ public class JoinedUpWritingList{
 				//These are words only within alternativeMatches - dont add them again!
 				for(int i=commonPartSize; i<= Math.min(a.length(), x.length());i++){
 					prefixTarget = a.substring(a.length()-i, a.length());
-					System.out.println("Comparing \"" + a + "\" with \"" + x + "\" with target " + prefixTarget);
+		//			System.out.println("Comparing \"" + a + "\" with \"" + x + "\" with target " + prefixTarget);
 					xPrefix = x.substring(0, i);
 					
 					if(i >= ((x.length()/2))){ 
 						//we just came backwards. 
 						if(prefixTarget.equals(xPrefix)){
 							thisMatch = x; 
-							System.out.println("MATCH was " + thisMatch);
+			//				System.out.println("MATCH was " + thisMatch);
 							break NEXT_WORD; 
 						}
 					}
 				}
-				
+				System.out.println("Couldnt find a match");
+			}else{
+			//	System.out.println("\nSearching for a match for "+ a + " (came from " + prev + ")");
 			}
 			
 			//For every string in the ignore list of thisNode
@@ -216,15 +421,17 @@ public class JoinedUpWritingList{
 			}
 			
 			//If the word has already been used in the chain, dont use it again?
-			
-			String check = overlappingConcat(prev, x); //this isnt working because when we backtrack, prev is not correct
-			//prev should be prev's prev (do in linkedlist!
-			
-			if(check.contains(a)){
-				continue; 
+			String check; 
+			if(chain.getCurrentNode().prev != null){
+				check = overlappingConcat(chain.getCurrentNode().prev.data, chain.getCurrentNode().data); //this isnt working because when we backtrack, prev is not correct
+				//prev should be prev's prev (do in linkedlist!) 
+			//	System.out.println("Is \"" + a + "\" contained in \"" + check + "\"");
+				if(! check.contains(a)){
+					continue; 
+				}
+			}else{ //There is no previous element to compare to - we are looking at the head 
+				//System.out.println("No previous element");
 			}
-			
-		//	System.out.println("Is \"" + a + "\" contained in \"" + check + "\"");
 			
 			//TODO: to make more efficient, only go into this for loop if x and a share common letters? 
 			
@@ -250,10 +457,10 @@ public class JoinedUpWritingList{
 						
 						if(thisMatch.equals("")){ //only first time enter this loop. 
 							thisMatch = x; 
-							System.out.println("First match was " + thisMatch);
+					//		System.out.println("First match was " + thisMatch);
 						}else{
 							otherOptions.add(x);
-							System.out.println("Added " + x + " to other options");
+						//	System.out.println("Added " + x + " to other options");
 							numMatches++; //Other words that matched the suffix
 						}
 				
@@ -276,7 +483,7 @@ public class JoinedUpWritingList{
 			return findDoubleChain(thisMatch, END, a);
 		}
 		
-		System.out.println(a + " was a DEAD END - add to ignore list");
+	//	System.out.println(a + " was a DEAD END - add to ignore list");
 		if(doublyCount > 0){ //If we have added at least one word to the chain
 			//look at numMatches of previous node. if more than one, then we examine
 			int previousAlternatives = chain.getNumMatches(a); 
@@ -288,11 +495,12 @@ public class JoinedUpWritingList{
 				chain.getCurrentNode().alternativeMatches.remove(a);
 				
 				//a should be prev, prev should be a's prev 
+			//	System.out.println("This node was " + a  + " and the node before " + chain.getCurrentNode().data + " was " + chain.getCurrentNode().prev.data);
 				return findDoubleChain(prev, END, a); //ISSUE HERE!! - need to be able to go recurisively backwards. 
 			}else if(chain.getNumMatches(prev) > 0 ){
 				//chain.addToIgnore()
 				//chain.addToIgnore(chain.getCurrentNode(), prev);
-				System.out.println("need to go back 2");
+				//System.out.println("need to go back 2");
 				
 			}
 		}
@@ -305,5 +513,5 @@ public class JoinedUpWritingList{
 			//another word Y which is at least minSize long and has its prefix
 			//matching the suffix of A, and its suffix matching the prefix of X
 		return NOTFOUND;  
-	}
+	}*/
 }

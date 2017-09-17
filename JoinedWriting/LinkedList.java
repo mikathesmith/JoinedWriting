@@ -18,6 +18,7 @@ public class LinkedList{
 		   public Node(){
 			   data = null; 
 			   numAlternatives = 0; 
+			   prev = null; 
 		   }
 		   
 		   public Node(String data){
@@ -50,11 +51,23 @@ public class LinkedList{
 			return;
 		}
 		Node current = head; //pointer that starts at head of linked list
+		Node temp; 
 		while(current.next!=null){ //go through list
 			current = current.next;
 		}
+		
 		current.next= new Node(data, numMatches, alternativeMatches);
-//		System.out.println("Added node "  + current.next.data);
+		current.next.prev = current; 
+		System.out.print("ADDED NODE "  + current.next.data + " TO CHAIN");
+		System.out.print(" with other alternatives : ");
+		for(String s : current.next.alternativeMatches){
+			System.out.print(s + " ");
+		}
+	}
+	
+	public static void replaceData(String newData, Node curr){
+		System.out.println("REPLACED NODE "+ curr + " WITH " + newData);
+		curr.data = newData; 
 	}
 	
 	
@@ -72,7 +85,7 @@ public class LinkedList{
 			//if we've found a node which 
 			//matches the one we want to delete
 			if(curr.next.data == oldData){//cut out next value
-			//	System.out.println("Replacing "+ oldData + " with " + newData);
+				System.out.println("REPLACED NODE "+ oldData + " WITH " + newData);
 				curr.next.data = newData; 
 				return;
 				//walk around the element.
@@ -81,45 +94,10 @@ public class LinkedList{
 		}
 	}
 	
-	public static int getNumMatches(String data){
-		if(head == null) return -1;
-		
-		if(head.data == data){
-			return head.numAlternatives;
-		}
-		//walk though linked list and stop one 
-		//before the element we want to delete
-		Node curr = head;
-		while(curr.next !=null){
-			//if we've found a node which 
-			//matches the one we want to delete
-			if(curr.next.data ==data){//cut out next value
-				return curr.next.numAlternatives; 
-				//walk around the element.
-			}
-			curr = curr.next; //continue walking
-		}
-		return -1; 
+	public static int getNumMatches(Node curr){
+		return curr.numAlternatives;
 	}
-	
-	public static void addToIgnore(Node n, String data){
-		if(head == n){
-			head.ignoreList.add(data);
-		}
-		//walk though linked list and stop one 
-		//before the element we want to delete
-		Node curr = head;
-		while(curr.next !=null){
-			//if we've found a node which 
-			//matches the one we want to delete
-			if(curr.next == n){//cut out next value
-				curr.next.ignoreList.add(data);
-				//walk around the element.
-			}
-			curr = curr.next; //continue walking
-		}
-	}
-	
+
 	public static Node getCurrentNode(){
 		//walk though linked list and stop one 
 		//before the element we want to delete
