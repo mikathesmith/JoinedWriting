@@ -7,6 +7,8 @@ import java.util.*;
  * 
  * Etude 7: LinkedList class for JoinedUpWriting
  * 
+ * Authors: Mika Smith and Mathew Boyes
+ * 
  * This code sets up a linked list of nodes structure for the chain 
  * of doubly linked words
  * 
@@ -47,6 +49,7 @@ public class LinkedList{
 		}
 		current.next= new Node(data);
 		current.next.prev = current;
+	//	System.out.println("ADDED NODE "+ current.next.data);
 	}
 	
 	/*
@@ -65,6 +68,7 @@ public class LinkedList{
 			//if we've found a node which 
 			//matches the one we want to delete
 			if(current.next == nodeToRemove){//cut out next value
+	//			System.out.println("REMOVED NODE "+ current.next.data);
 				current.next = current.next.next; 
 				return;
 				//walk around the element.
@@ -94,6 +98,16 @@ public class LinkedList{
 	 */
 	public static void addAlternatives(Node curr, ArrayList<String> alternatives){
 		curr.alternativeMatches = alternatives; 
+	}
+	
+	public static int numNodes(){
+		int count=0; 
+		Node current = head;
+		while(current!=null){ //go through list
+			current = current.next;
+			count++; 
+		}
+		return count; //returns the tail
 	}
 
 	/*

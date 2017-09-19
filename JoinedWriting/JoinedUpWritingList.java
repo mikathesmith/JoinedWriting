@@ -20,24 +20,27 @@ import java.io.*;
 
 public class JoinedUpWritingList{
 	public static ArrayList<String> dict;
-	public static int singlyCount;
-	public static int doublyCount;
 	public static final String NOTFOUND = "INVALID";
-	public static LinkedList chain; 
+	public static LinkedList singleChain; 
+	public static LinkedList doubleChain; 
 	public static Boolean backOneStep;
 	
 	public static void main(String[]args){
 
-		chain = new LinkedList(); 
+		
 		Scanner sc = new Scanner(System.in);
 		while(sc.hasNextLine()){
 			String a = args[0];
 			String b = args[1];
+			String word; 
 			dict = new ArrayList<String>();//scan in a given dictionary - up to 100,000 words
-			while(sc.hasNext()){
-				dict.add(sc.next());
+			while(sc.hasNextLine()){
+				word = sc.nextLine(); 
+				if(!word.equals("")){
+					dict.add(word);
+				}
 			}
-			System.out.println(singlyJoined(a, b));
+			System.out.println(singlyJoined(a, b)); //this affects the double chain?
 			System.out.println(doublyJoined(a, b));
 		}
 		sc.close(); 
@@ -47,21 +50,135 @@ public class JoinedUpWritingList{
 	public static String singlyJoined(String a, String b){
 		StringBuilder result = new StringBuilder(); 
 		StringBuilder chainBuilder = new StringBuilder(); 
-		String completeChain = findSingleChain(a, b, chainBuilder); 
+		
+		if(a.equals(b)){
+			return "1 " + a + " " + b;
+		}
+		
+		backOneStep = false;
+		singleChain = new LinkedList(); 
+		singleChain.appendNode(a);
+		String completeChain = findSingleChain(singleChain.getCurrentNode(), b); 
 		
 		if(completeChain.equals("INVALID")){
 			return "0";
 		}else{
-			result.append(singlyCount + " ");
-			result.append(a + " ");
-			result.append(completeChain);
-			result.append(b);
-			return result.toString(); 
+			return singleChain.numNodes() + " " + singleChain.printNodes();
 		}
+	}
+	
+	public static String findSingleChain(LinkedList.Node curr, String END){
+		String xTarget;
+		String target; 
+		String endTarget;
+		int commonPartSize;
+		String thisMatch = "";
+		ArrayList<String> otherOptions = new ArrayList<String>(); 
+		
+		String a = curr.data; 
+		commonPartSize = Math.min(a.length(), END.length())/2;  //Only has to be as big as half of 
+		//the smaller word
+		
+		//STOPPING CASE - if a word whose suffix is a prefix of END, stop. 
+		for(int i=commonPartSize; i< Math.min(a.length(), END.length()); i++){
+		//	System.out.println("Min size is " + i);
+			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) suffix
+		//	System.out.println("Target is " + target);
+			
+			endTarget = END.substring(0, i); 
+			
+			if(target.equals(endTarget)&& target.length()>0){//suffix == prefix
+			//System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
+				singleChain.appendNode(END);
+				return singleChain.printNodes();   //a = b; stopping case 
+			}
+		}
+		
+		
+		if(backOneStep){ //If we are backtracking
+			for(String x : curr.alternativeMatches){
+				if(curr.ignoreList.contains(x) || curr.data.equals(x)){
+					continue;  //skip the word if it is in the ignore list or if we are comparing to itself
+				}
+				thisMatch = x; 
+				break;
+			}
+		}else{
+			NEXT_WORD: for(String x : dict){ //for every word in dictionary
+				//find a word X which starts with the same commonPartSize or more letters as A ends with. 
+				//check = overlappingConcat(prev, x);
+				if(singleChain.containsNode(x)){//If the word has already been used in the chain, dont use it to avoid loops
+					continue NEXT_WORD;
+				}
+				
+				if(a.equals(x)){ //If same word, dont need to check
+					continue NEXT_WORD;
+				}
+				
+				commonPartSize = Math.min(a.length(), x.length())/2; 
+				//minsize changes with every word pair
+				for(int i=commonPartSize; i < Math.min(a.length(), x.length()); i++){
+					target = a.substring(a.length()-i, a.length()); 
+					xTarget = x.substring(0, i);  
+					
+					if(target.equals(xTarget) && target.length()>0){ //Found a pair - these two words are singly joined 
+				//		System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + target + "-");
+						//res.append(x +" "); //append the word to the resulting chain
+						
+						if(thisMatch.equals("")){ //only first time enter this loop. 
+							thisMatch = x; 
+						}else{
+							otherOptions.add(x); //these will be added to next node
+						}
+						continue NEXT_WORD; //break out of this loop
+						
+				//		singleChain.appendNode(x);
+					//	singlyCount++; 
+						//return findSingleChain(singleChain.getCurrentNode(), END);
+						//use this new word as A and find another word X -call recursively until we match END 
+					}
+					//If not found, look at for a larger common part of the same two words
+				}
+				//if not found, keep looping to the next word
+			}
+		}
+		
+		if(!thisMatch.equals("")){
+			if(backOneStep){
+				backOneStep = false; 
+			}else{
+				singleChain.addAlternatives(curr, otherOptions);
+			}
+			
+			singleChain.appendNode(thisMatch);
+			//System.out.println("New tail is " + chain.getCurrentNode().data);
+			return findSingleChain(singleChain.getCurrentNode(), END);
+		}else{ //there was no match so go back a step - We have NOT added a new node. 
+		//	System.out.println(curr.data + " was a DEAD END - need to go back a step");
+			
+			while(curr.prev != null){ //mark this node to be ignored by the one before. 
+				LinkedList.Node prevNode = curr.prev; 
+				if(curr.prev.alternativeMatches.size() > 0){ //if there are alternative matches
+					curr.prev.ignoreList.add(curr.data); 
+					singleChain.removeNode(curr);
+					backOneStep = true;
+					return findSingleChain(prevNode, END);
+				}
+				
+				//this previous node did not alternatives, so look at the one before
+				curr.prev.ignoreList.add(curr.data);  //TODO: This prevents it ever going back in this direction?
+				singleChain.removeNode(curr);
+				curr = curr.prev;
+			}
+		}			
+		//If we have looked through the whole dictionary, stop and return invalid. 
+		
+		return NOTFOUND; 
 	}
 	
 	//This method recursively finds a chain of singly joined strings from 
 	//the starting word to END 
+	/*
 	public static String findSingleChain(String a, String END, StringBuilder res){
 		String xTarget;
 		String target; 
@@ -85,9 +202,14 @@ public class JoinedUpWritingList{
 			}
 		}
 		
-		for(String x : dict){ //for every word in dictionary
+		NEXT_WORD: for(String x : dict){ //for every word in dictionary
 			//find a word X which starts with the same minSize or more letters as A ends with. 
 			//check = overlappingConcat(prev, x);
+			
+			if(a.equals(x)){ //If same word, dont need to check
+				continue NEXT_WORD;
+			}
+			
 			minSize = Math.min(a.length(), x.length())/2; 
 			//minsize changes with every word pair
 			for(int i=minSize; i < Math.min(a.length(), x.length()); i++){
@@ -109,21 +231,23 @@ public class JoinedUpWritingList{
 		}//If we have looked through the whole dictionary, stop and return invalid. 
 		
 		return NOTFOUND; 
-	}
+	}*/ 
 	
 	//This method returns a chain of doubly joined words, where the common part
 	//in each pair is at least half as long as both of the words.
 	public static String doublyJoined(String a, String b){
-		String previous = ""; 
+		if(a.equals(b)){
+			return "1 " + a + " " + b;
+		}
+		doubleChain = new LinkedList();
+		doubleChain.appendNode(a);
 		backOneStep = false; 
-		chain.appendNode(a);
-		
-		String completeChain = findDoubleChain(chain.getCurrentNode(), b); 
+		String completeChain = findDoubleChain(doubleChain.getCurrentNode(), b); 
 		
 		if(completeChain.equals("INVALID")){
 			return "0";
 		}else{
-			return doublyCount + " " + chain.printNodes();
+			return doubleChain.numNodes() + " " + completeChain;
 		}
 	}
 	
@@ -140,17 +264,19 @@ public class JoinedUpWritingList{
 	
 	//This method recursively calls itself to find a chain of words which 
 	//are doubly joined from start to END.
+	
+	//should not be longer than 100!!
 	public static String findDoubleChain(LinkedList.Node curr, String END){
 		String xPrefix; 
 		String target; 
 		String endTarget;
 		String prefixTarget;
-		int numMatches = 0;
-		String thisMatch = "";
+		
+	
 		ArrayList<String> otherOptions = new ArrayList<String>(); 
 		
 		String a = curr.data;
-		int commonPartSize = a.length()/2; 
+		int commonPartSize = Math.max(a.length()/2, END.length()/2); 
 		
 		//STOPPING CASE: Check if we are complete - if curr's suffix == END's prefix
 		String check = ""; 
@@ -162,33 +288,36 @@ public class JoinedUpWritingList{
 					endTarget = END.substring(0, i);
 					
 					if(i >= (END.length()/2)){
-						if(target.equals(endTarget)){
+						if(target.equals(endTarget) && target.length()>0){
 						//	System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
-							doublyCount= doublyCount + 2;
-							chain.appendNode(END);
-							return chain.printNodes();
+							doubleChain.appendNode(END);
+							return doubleChain.printNodes();
 						}
 					}
 				}
 			}
 		}
+		String thisMatch = "";
 		
 		if(backOneStep){ //If we are backtracking
 			for(String x : curr.alternativeMatches){
 				if(curr.ignoreList.contains(x) || curr.data.equals(x)){
 					continue;  //skip the word if it is in the ignore list or if we are comparing to itself
 				}
+			
 				thisMatch = x; 
+			//	System.out.println("Chose " + x + " as an alternative to match to " + curr.prev.data);
 				break;
 			}
 		}else{ //NOT backtracking - going forward 
 		//	System.out.println("\nSearching for matches for "+ curr.data + "...");
 			//System.out.println("CURRENT CHAIN: " + chain.printNodes() + "\n");
+			
 	
 			NEXT_WORD: for(String x : dict){
 				
 				
-				if(chain.containsNode(x)){//If the word has already been used in the chain, dont use it to avoid loops
+				if(doubleChain.containsNode(x)){//If the word has already been used in the doubleChain, dont use it to avoid loops
 					continue NEXT_WORD;
 				}
 				
@@ -203,23 +332,37 @@ public class JoinedUpWritingList{
 					}
 				}
 				
+				//If the word we are looking at brings us one step closer to the end word, then use it?
+				//eg if we are on aboard and we see ardent - we look at the end of ardent and find that 
+				//it matches END so we use aboard and ardent?? 
+				
+				
+				//the common part needs to be the larger of the two common part sizes
+				commonPartSize = Math.max(a.length()/2, x.length()/2);
+				//System.out.println("Chose "+ commonPartSize + " as the minimum size the common part must be between " + a + " and " + x);
+				//WRONG MATCHES!:  ableeze ea abacus
+				//ba to abada? 
+				//fth to heteroplasty?
+				
+				//look at all letters from minimum common part size to the length of the shorter word
 				for(int i=commonPartSize; i<= Math.min(a.length(), x.length());i++){
 					//look for a word whose prefix == a's suffix 
 					prefixTarget = a.substring(a.length()-i, a.length());
 					xPrefix = x.substring(0, i);
 					
 					//if the minSize is greater or equal to half of x 
-					if(i >= ((x.length()/2))){
-						if(prefixTarget.equals(xPrefix)){
+				//	if(i >= ((x.length()/2))){ 
+						if(prefixTarget.equals(xPrefix) && prefixTarget.length()>0){
 							
 							if(thisMatch.equals("")){ //only first time enter this loop. 
 								thisMatch = x; 
+							//	System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + prefixTarget + "-");
 							}else{
 								otherOptions.add(x); //these will be added to next node
 							}
 							continue NEXT_WORD; //break out of this loop
 						}
-					}
+					//}
 				}
 			}
 		}
@@ -229,29 +372,32 @@ public class JoinedUpWritingList{
 			if(backOneStep){
 				backOneStep = false; 
 			}else{
-				chain.addAlternatives(curr, otherOptions);
+				doubleChain.addAlternatives(curr, otherOptions);
+			//	System.out.println("Adding " + thisMatch);
 			}
 			
-			chain.appendNode(thisMatch);
-			doublyCount++; 	
+		//	System.out.println("CURRENT CHAIN: " + doubleChain.printNodes()); 
+			doubleChain.appendNode(thisMatch);
 			//System.out.println("New tail is " + chain.getCurrentNode().data);
-			return findDoubleChain(chain.getCurrentNode(), END);
+			return findDoubleChain(doubleChain.getCurrentNode(), END);
 		}else{ //there was no match so go back a step - We have NOT added a new node. 
 		//	System.out.println(curr.data + " was a DEAD END - need to go back a step");
 			
 			while(curr.prev != null){ //mark this node to be ignored by the one before. 
 				LinkedList.Node prevNode = curr.prev; 
 				if(curr.prev.alternativeMatches.size() > 0){ //if there are alternative matches
-					curr.prev.ignoreList.add(curr.data); 
-					chain.removeNode(curr);
-					backOneStep = true;
 					
+					curr.prev.ignoreList.add(curr.data); 
+					doubleChain.removeNode(curr);
+			//		System.out.println("CURRENT CHAIN: " + doubleChain.printNodes()); 
+					backOneStep = true;
+				//	System.out.println("Recovering from " + curr.data);
 					return findDoubleChain(prevNode, END);
 				}
 				
 				//this previous node did not alternatives, so look at the one before
 				curr.prev.ignoreList.add(curr.data);  //TODO: This prevents it ever going back in this direction?
-				chain.removeNode(curr);
+				doubleChain.removeNode(curr);
 				curr = curr.prev;
 			}
 		}
