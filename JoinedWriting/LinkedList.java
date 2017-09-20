@@ -75,7 +75,6 @@ public class LinkedList{
 			}
 			current = current.next; //continue walking
 		}
-		
 	}
 	
 	/*
@@ -135,5 +134,10 @@ public class LinkedList{
 		}
 		return sb.toString();
 	}
+	
+	public static void destroy() {
+	    head = null; 
+	}
+
 	
 }

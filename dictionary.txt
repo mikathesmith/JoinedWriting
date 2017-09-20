@@ -21,6 +21,6 @@ abc
 bcd
 dcf
 dft
-heteroplasty 
+heteroplasty
 astyanax
 anaxagorean

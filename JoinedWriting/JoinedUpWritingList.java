@@ -1,5 +1,6 @@
 package JoinedWriting; 
 import java.util.*;
+
 import java.io.*; 
 
 
@@ -40,7 +41,7 @@ public class JoinedUpWritingList{
 					dict.add(word);
 				}
 			}
-			System.out.println(singlyJoined(a, b)); //this affects the double chain?
+		    System.out.println(singlyJoined(a, b)); //this affects the double chain?
 			System.out.println(doublyJoined(a, b));
 		}
 		sc.close(); 
@@ -55,6 +56,9 @@ public class JoinedUpWritingList{
 			return "1 " + a + " " + b;
 		}
 		
+		singleChain.destroy();
+		doubleChain.destroy();
+		
 		backOneStep = false;
 		singleChain = new LinkedList(); 
 		singleChain.appendNode(a);
@@ -63,7 +67,7 @@ public class JoinedUpWritingList{
 		if(completeChain.equals("INVALID")){
 			return "0";
 		}else{
-			return singleChain.numNodes() + " " + singleChain.printNodes();
+			return completeChain;
 		}
 	}
 	
@@ -77,7 +81,12 @@ public class JoinedUpWritingList{
 		
 		String a = curr.data; 
 		commonPartSize = Math.min(a.length(), END.length())/2;  //Only has to be as big as half of 
+		if(Math.min(a.length(), END.length()) % 2 == 1){ //is odd
+			commonPartSize++; 
+		}
 		//the smaller word
+	//	System.out.println("\nCURRENT CHAIN: " + singleChain.printNodes());
+		//System.out.println("Looking at " + curr.data);
 		
 		//STOPPING CASE - if a word whose suffix is a prefix of END, stop. 
 		for(int i=commonPartSize; i< Math.min(a.length(), END.length()); i++){
@@ -90,7 +99,7 @@ public class JoinedUpWritingList{
 			if(target.equals(endTarget)&& target.length()>0){//suffix == prefix
 			//System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
 				singleChain.appendNode(END);
-				return singleChain.printNodes();   //a = b; stopping case 
+				return singleChain.numNodes() + " " + singleChain.printNodes();   //a = b; stopping case 
 			}
 		}
 		
@@ -116,13 +125,19 @@ public class JoinedUpWritingList{
 				}
 				
 				commonPartSize = Math.min(a.length(), x.length())/2; 
+				if(Math.min(a.length(), x.length()) % 2 == 1){ //is odd
+					commonPartSize++; 
+				}
+			//	System.out.println("Chose "+ commonPartSize + " as the minsize of common part, between " + a + " and " + x);
 				//minsize changes with every word pair
 				for(int i=commonPartSize; i < Math.min(a.length(), x.length()); i++){
 					target = a.substring(a.length()-i, a.length()); 
 					xTarget = x.substring(0, i);  
 					
-					if(target.equals(xTarget) && target.length()>0){ //Found a pair - these two words are singly joined 
-				//		System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + target + "-");
+					//System.out.println("C" + commonPartSize);
+					
+					if(target.equals(xTarget) && target.length() > 0){ //Found a pair - these two words are singly joined 
+					//	System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + target + "-");
 						//res.append(x +" "); //append the word to the resulting chain
 						
 						if(thisMatch.equals("")){ //only first time enter this loop. 
@@ -239,6 +254,10 @@ public class JoinedUpWritingList{
 		if(a.equals(b)){
 			return "1 " + a + " " + b;
 		}
+		
+		singleChain.destroy();
+		doubleChain.destroy();
+		
 		doubleChain = new LinkedList();
 		doubleChain.appendNode(a);
 		backOneStep = false; 
@@ -277,6 +296,12 @@ public class JoinedUpWritingList{
 		
 		String a = curr.data;
 		int commonPartSize = Math.max(a.length()/2, END.length()/2); 
+		if(Math.max(a.length(), END.length()) % 2 == 1){ //is odd
+			commonPartSize++; 
+		}
+		
+		//System.out.println("CURRENT CHAIN: " + doubleChain.printNodes()); 
+	//	System.out.println("Looking at " + curr.data +"\n");
 		
 		//STOPPING CASE: Check if we are complete - if curr's suffix == END's prefix
 		String check = ""; 
@@ -287,9 +312,9 @@ public class JoinedUpWritingList{
 					target = a.substring(a.length()-i, a.length());
 					endTarget = END.substring(0, i);
 					
-					if(i >= (END.length()/2)){
+					if(i >= ((END.length()%2 == 1) ? END.length()/2 + 1 : END.length()/2)){ //ensures the common part size is also larger than end.length/2
 						if(target.equals(endTarget) && target.length()>0){
-						//	System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
+//					//		System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
 							doubleChain.appendNode(END);
 							return doubleChain.printNodes();
 						}
@@ -297,6 +322,7 @@ public class JoinedUpWritingList{
 				}
 			}
 		}
+		
 		String thisMatch = "";
 		
 		if(backOneStep){ //If we are backtracking
@@ -339,7 +365,10 @@ public class JoinedUpWritingList{
 				
 				//the common part needs to be the larger of the two common part sizes
 				commonPartSize = Math.max(a.length()/2, x.length()/2);
-				//System.out.println("Chose "+ commonPartSize + " as the minimum size the common part must be between " + a + " and " + x);
+				if(Math.max(a.length(), x.length()) % 2 == 1){ //is odd
+					commonPartSize++; 
+				}
+		//		System.out.println("Chose "+ commonPartSize + " as the minimum size the common part must be between " + a + " and " + x);
 				//WRONG MATCHES!:  ableeze ea abacus
 				//ba to abada? 
 				//fth to heteroplasty?
@@ -351,18 +380,20 @@ public class JoinedUpWritingList{
 					xPrefix = x.substring(0, i);
 					
 					//if the minSize is greater or equal to half of x 
-				//	if(i >= ((x.length()/2))){ 
+					if(i >= ((x.length()%2 == 1) ? x.length()/2 + 1 : x.length()/2)){ 
+						//turn this into BFS?
 						if(prefixTarget.equals(xPrefix) && prefixTarget.length()>0){
-							
+				//			System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + prefixTarget + "-");
 							if(thisMatch.equals("")){ //only first time enter this loop. 
 								thisMatch = x; 
-							//	System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + prefixTarget + "-");
+					//			System.out.println("Exploring " + x + " first");
 							}else{
 								otherOptions.add(x); //these will be added to next node
+						//		System.out.println("Exploring "+ x + " later");
 							}
 							continue NEXT_WORD; //break out of this loop
 						}
-					//}
+					}
 				}
 			}
 		}
@@ -376,7 +407,7 @@ public class JoinedUpWritingList{
 			//	System.out.println("Adding " + thisMatch);
 			}
 			
-		//	System.out.println("CURRENT CHAIN: " + doubleChain.printNodes()); 
+			
 			doubleChain.appendNode(thisMatch);
 			//System.out.println("New tail is " + chain.getCurrentNode().data);
 			return findDoubleChain(doubleChain.getCurrentNode(), END);
@@ -389,10 +420,11 @@ public class JoinedUpWritingList{
 					
 					curr.prev.ignoreList.add(curr.data); 
 					doubleChain.removeNode(curr);
-			//		System.out.println("CURRENT CHAIN: " + doubleChain.printNodes()); 
+				//	System.out.println("CURRENT CHAIN: " + doubleChain.printNodes()); 
 					backOneStep = true;
 				//	System.out.println("Recovering from " + curr.data);
 					return findDoubleChain(prevNode, END);
+					//return findDoubleChain(doubleChain.getCurrentNode(), END);
 				}
 				
 				//this previous node did not alternatives, so look at the one before
