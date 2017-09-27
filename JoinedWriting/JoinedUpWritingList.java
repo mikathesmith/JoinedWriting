@@ -1,4 +1,4 @@
-package JoinedWriting; 
+//package JoinedWriting; 
 import java.util.*;
 
 import java.io.*; 
@@ -8,7 +8,7 @@ import java.io.*;
 /*
  * Etude 7: Joined Up Writing 
  *
- * Authors: Mika Smith and Mathew Boyes
+ * Authors: Mika Smith and Matthew Boyes
  * 
  * A program that takes two words and returns the words
  * that are singly joined up or doubly joined up, where 
@@ -22,17 +22,27 @@ import java.io.*;
 public class JoinedUpWritingList{
 	public static ArrayList<String> dict;
 	public static final String NOTFOUND = "INVALID";
-	public static LinkedList singleChain; 
-	public static LinkedList doubleChain; 
-	public static Boolean backOneStep;
+	//public static LinkedList singleChain; 
+	//public static LinkedList doubleChain; 
+//	/public static Boolean backOneStep;
+	public static String first="";
+	public static String last=""; 
+	
+	//Storing words as trees of characters 
+    public static TreeNode tree = new TreeNode();
 	
 	public static void main(String[]args){
 
 		
 		Scanner sc = new Scanner(System.in);
 		while(sc.hasNextLine()){
-			String a = args[0];
-			String b = args[1];
+			first = args[0];
+			last = args[1];
+			if(first.equals(last)){
+				System.out.println("1 " + first + " " + last);
+				break;
+			}
+			
 			String word; 
 			dict = new ArrayList<String>();//scan in a given dictionary - up to 100,000 words
 			while(sc.hasNextLine()){
@@ -41,11 +51,267 @@ public class JoinedUpWritingList{
 					dict.add(word);
 				}
 			}
-		    System.out.println(singlyJoined(a, b)); //this affects the double chain?
-			System.out.println(doublyJoined(a, b));
+			
+			for (String w : dict) {
+	            tree.addNode(w, 0);
+	        }
+			//Collections.sort(dict); //Sort the dictionary alphabetically
+			
+		   // System.out.println(singlyJoined(a, b)); //this affects the double chain?
+			//System.out.println(doublyJoined(a, b));
+			printList(getSinglyJoinedArray());
+	        printList(getDoublyJoinedArray());
 		}
 		sc.close(); 
 	}
+	
+	 public static ArrayList<String> getDoublyJoinedArray() {
+	        // If the first AND second word overlaps by half or more,
+	        // we want to include it
+		 	Boolean doublyJoined = true; 
+	        return getLinkedArray(doublyJoined);
+	    }
+	 
+	 public static ArrayList<String> getSinglyJoinedArray() {
+	        // If the first AND second word overlaps by half or more,
+	        // we want to include it
+		 	Boolean doublyJoined = false; 
+	        return getLinkedArray(doublyJoined);
+	    }
+	 
+	 public static void printList(ArrayList<String> list) {
+	        System.out.print(list.size());
+	        for (String item : list) {
+	            System.out.print(" " + item);
+	        }
+	        System.out.println();
+	    }
+	
+	//This method returns the merged string, a + b, where the overlapping 
+	//characters are not duplicated. 
+	public static String overlappingConcat(String a, String b) {                              
+		  for(int i = 0; i < a.length(); i++) {
+		    if(b.startsWith(a.substring(i))) {
+		      return a.substring(0, i) + b;
+		    }
+		  }
+		  return a + b;
+	}
+	 
+	 public static ArrayList<String> getLinkedArray(Boolean doublyJoined){
+		 String xPrefix="";
+		 String prefixTarget="";
+		 String check="";
+		 int commonPartSize=0;
+		 
+         HashSet<String> seen = new HashSet<String>(dict.size());
+         seen.add(first);
+        
+
+	        // Queue of paths
+         Queue<ArrayList<String>> paths = new LinkedList<ArrayList<String>>();
+        // We start with an initial path: [first]
+         ArrayList<String> initial = new ArrayList<String>();
+         initial.add(first);
+      //  System.out.println(first);
+        // Add this to our paths queue
+         paths.add(initial);
+		 
+	 	 while(!paths.isEmpty()){
+	 		 
+			ArrayList<String> currentPath = paths.remove(); 
+			
+		/*	System.out.print("Path is : ");
+			for(String w: currentPath){
+				System.out.print(w+" ");
+			}
+			System.out.println();
+			
+			System.out.print("Seen is : ");
+			for(String w: seen){
+				System.out.print(w+" ");
+			}
+			System.out.println();*/
+			//get last word in the chain
+			String currentWord = currentPath.get(currentPath.size()-1); 
+			if(currentWord.equals(last)) return currentPath; //stopping case
+			//System.out.println(currentWord);
+			String prevWord = "";
+			if(currentPath.size() > 2){
+				prevWord = currentPath.get(currentPath.size()-2);
+			//	System.out.println("prevword is " + prevWord);
+			}
+			
+			int currentWordLength = currentWord.length(); 
+			 
+		
+
+			//check for alternative 
+			//for(int i = 0; i < currentWordLength; i++){
+		//	prefixTarget = currentWord.substring(currentWord.length()-i, currentWord.length());
+			
+				//use tree.wordsWithPRefix(prefixTarget)
+			
+			NEXT_WORD: for(String x : dict){
+			//	System.out.println("Is " + x + " a potential match for " + currentWord);
+				
+				
+				if(x.equals(currentWord)){
+				//	System.out.println("skipped same");
+					continue NEXT_WORD;
+				}
+			
+				if(seen.contains(x)){
+				//	System.out.println("skipped seen");
+					continue NEXT_WORD; 
+				}
+				
+				
+			/*	if(doublyJoined && !prevWord.equals("")){
+					check = overlappingConcat(prevWord, x);
+					if(!check.contains(currentWord)){ //Only go forward if they have similar letters
+					//	System.out.println("skipped no overlap of " + currentWord + " between " + prevWord + " and " + x);
+						continue NEXT_WORD;  
+					}
+				}*/ 
+				
+				if(doublyJoined){
+				//	System.out.println("Doubly");
+					commonPartSize = Math.max(currentWord.length()/2, x.length()/2);
+					if(Math.max(currentWord.length(), x.length()) % 2 == 1){ //is odd
+						commonPartSize++; 
+					}
+				}else{
+					//System.out.println("Singly");
+					commonPartSize = Math.min(currentWord.length(), x.length())/2; 
+					if(Math.min(currentWord.length(), x.length()) % 2 == 1){ //is odd
+						commonPartSize++; 
+					}
+				}
+				
+		//		System.out.println("Comparing " + currentWord + " to "+ x);
+				
+				for(int i=commonPartSize; i<= Math.min(currentWord.length(), x.length()); i++){
+					//look for a word where prefix == a's suffix 
+					prefixTarget = currentWord.substring(currentWord.length()-i, currentWord.length());
+					xPrefix = x.substring(0, i);
+					
+					
+					//if the minSize is greater or equal to half of x 
+					if(doublyJoined){
+						if(i >= ((x.length()%2 == 1) ? x.length()/2 + 1 : x.length()/2));
+					}
+					
+						//turn this into BFS?
+					if(prefixTarget.equals(xPrefix) && prefixTarget.length() > 0){
+					//	System.out.println("\"" + currentWord + "\" matched with \"" + x + "\" with -" + prefixTarget + "-");
+						//if there is overlap
+						seen.add(x);
+						L path = new ArrayList<String>();
+				
+						path.addAll(currentPath);
+						path.add(x);
+						paths.add(path);
+						
+						continue NEXT_WORD;
+						//to there 
+					//	continue NEXT_WORD; //break out of this loop
+					}
+					
+				}
+			
+		//}
+			}
+	 	}
+	 	return new ArrayList<String>();
+	 }
+	 /*
+	 static class TreeNode{
+			private static HashMap<Character, TreeNode> children = new HashMap<Character, TreeNode>();
+	        private static String word = null;
+			
+			
+			public static void addNode(String s, int level){
+				if(s.length() == level){
+					word = s;
+				}else{
+					if(!children.containsKey(s.charAt(level))){
+						children.put(s.charAt(level), new TreeNode());
+					}
+					children.get(s.charAt(level)).addNode(s, level + 1);
+				}
+			}
+			
+			public static ArrayList<String> wordsWithPrefix(String suffix) {
+	            ArrayList<String> matchedWords = new ArrayList<String>();
+
+	            if(suffix.isEmpty()) {
+	                if(word != null){
+	                	matchedWords.add(word);
+	                }
+
+	                for(TreeNode child : children.values()){
+	                	matchedWords.addAll(child.wordsWithPrefix(""));
+	                }
+	            }else{
+	                if(children.containsKey(suffix.charAt(0))) {
+	                	matchedWords.addAll(children.get(suffix.charAt(0)).wordsWithPrefix(suffix.substring(1)));
+	                }
+	            }
+	            return matchedWords;
+	        }
+			
+		}*/
+	    static class TreeNode {
+	        private static HashMap<Character, TreeNode> children = new HashMap<Character, TreeNode>();
+	        public static String word = null;
+
+	        /**
+	         * Returns a list of words that start with the remaining characters. If empty,
+	         * returns a list of all child words.
+	         * @param remainingChars remaining characters
+	         * @return A List of all words starting with {@code remainingChars}
+	         */
+	        public static ArrayList<String> wordsWithPrefix(String remainingChars) {
+	            ArrayList<String> result = new ArrayList<String>();
+
+	            if (remainingChars.isEmpty()) {
+	                if (word != null) result.add(word);
+
+	                for (TreeNode child : children.values()) {
+	                    result.addAll(child.wordsWithPrefix(""));
+	                }
+	            } else {
+	                if (children.containsKey(remainingChars.charAt(0))) {
+	                    result.addAll(children.get(remainingChars.charAt(0)).wordsWithPrefix(remainingChars.substring(1)));
+	                }
+	            }
+
+	            return result;
+	        }
+
+	        private static void addNode(String word, int depth) {
+	            if (depth == word.length()) {
+	                word = word;
+	            } else {
+	                if (!children.containsKey(word.charAt(depth))) {
+	                    children.put(word.charAt(depth), new TreeNode());
+	                }
+	                children.get(word.charAt(depth)).addNode(word, depth + 1);
+	            }
+	        }
+
+	        /**
+	         * Puts a word into the search tree
+	         * @param word Word to insert into the tree
+	         */
+	        public static void addNode(String word) {
+	        	addNode(word, 0);
+	        }
+	    }
+}
+
+/*
 	
 	//The common part is at least half as long as one of the two words
 	public static String singlyJoined(String a, String b){
@@ -191,63 +457,6 @@ public class JoinedUpWritingList{
 		return NOTFOUND; 
 	}
 	
-	//This method recursively finds a chain of singly joined strings from 
-	//the starting word to END 
-	/*
-	public static String findSingleChain(String a, String END, StringBuilder res){
-		String xTarget;
-		String target; 
-		String endTarget;
-		int minSize;
-		
-		minSize = Math.min(a.length(), END.length())/2; 
-		//STOPPING CASE - if a word whose suffix is a prefix of END, stop. 
-
-		for(int i=minSize; i< Math.min(a.length(), END.length()); i++){
-		//	System.out.println("Min size is " + i);
-			target = a.substring(a.length()-i, a.length());  //(inclusive, exclusive) suffix
-		//	System.out.println("Target is " + target);
-			
-			endTarget = END.substring(0, i); 
-			
-			if(target.equals(endTarget)&& target.length()>0){//suffix == prefix
-			//System.out.println("CHAIN FINISHED \"" + a + "\" matched with \"" + END+"\" with -" + target + "-");
-				singlyCount= singlyCount + 2; //first word is matched to last word
-				return res.toString();  //a = b; stopping case 
-			}
-		}
-		
-		NEXT_WORD: for(String x : dict){ //for every word in dictionary
-			//find a word X which starts with the same minSize or more letters as A ends with. 
-			//check = overlappingConcat(prev, x);
-			
-			if(a.equals(x)){ //If same word, dont need to check
-				continue NEXT_WORD;
-			}
-			
-			minSize = Math.min(a.length(), x.length())/2; 
-			//minsize changes with every word pair
-			for(int i=minSize; i < Math.min(a.length(), x.length()); i++){
-				target = a.substring(a.length()-i, a.length()); 
-				
-				xTarget = x.substring(0, i);  
-				
-				if(target.equals(xTarget) && target.length()>0){ //Found a pair - these two words are singly joined 
-			//		System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + target + "-");
-					res.append(x +" "); //append the word to the resulting chain
-					singlyCount++; 
-					return findSingleChain(x, END, res);
-					//use this new word as A and find another word X -call recursively until we match END 
-				}
-				//If not found, look at for a larger common part of the same two words
-			}
-			//if not found, keep looping to the next word
-			
-		}//If we have looked through the whole dictionary, stop and return invalid. 
-		
-		return NOTFOUND; 
-	}*/ 
-	
 	//This method returns a chain of doubly joined words, where the common part
 	//in each pair is at least half as long as both of the words.
 	public static String doublyJoined(String a, String b){
@@ -269,6 +478,14 @@ public class JoinedUpWritingList{
 			return doubleChain.numNodes() + " " + completeChain;
 		}
 	}
+
+	 public void printList(ArrayList<String> list) {
+	        System.out.print(list.size());
+	        for (String item : list) {
+	            System.out.print(" " + item);
+	        }
+	        System.out.println();
+	    }
 	
 	//This method returns the merged string, a + b, where the overlapping 
 	//characters are not duplicated. 
@@ -286,19 +503,93 @@ public class JoinedUpWritingList{
 	
 	//should not be longer than 100!!
 	public static String findDoubleChain(LinkedList.Node curr, String END){
+		//Queue<Array
 		String xPrefix; 
 		String target; 
 		String endTarget;
 		String prefixTarget;
 		
+	/*	HashSet<String> seenWords = new HashSet<String>(dict.size());
+		seenWords.add(firstWord);
+		
+		Queue<ArrayList<String>> paths = new LinkedList<ArrayList<String>>();
+	        // We start with an initial path: [first]
+        ArrayList<String> initial = new ArrayList<String>();
+        initial.add(first);
+        // Add this to our paths queue
+        paths.add(initial);
+        
+       
+	
+		
+		
 	
 		ArrayList<String> otherOptions = new ArrayList<String>(); 
+		
+		//BFS of all possible chains 
+	/*	while(!paths.isEmpty()){
+			ArrayList<String> currentPath = paths.remove(); 
+			//get last word in the chain
+			String currentWord = currentPath.get(currentPath.size()-1); 
+			String prevWord = currentPath.get(currentPath.size()-2);
+			int currentWordLength = currentWord.length(); 
+			
+			if(currentWord.equals(last)) return currentPath; 
+			
+			//check for alternative 
+			for(int i = 0; i < currentWordLength; i++){
+				
+			
+				
+				
+				NEXT_WORD: for(String x : dict){
+				
+					if(seen.contains(x); 
+					
+					check = overlappingConcat(prevWord, x);
+					if(!check.contains(currentWord)){ //Only go forward if they have similar letters
+						continue NEXT_WORD;  
+					}
+					
+					for(int i=commonPartSize; i<= Math.min(a.length(), x.length());i++){
+						//look for a word where prefix == a's suffix 
+						prefixTarget = currentWord.substring(currentWord.length()-i, currentWord.length());
+						xPrefix = x.substring(0, i);
+						
+						//if the minSize is greater or equal to half of x 
+						if(i >= ((x.length()%2 == 1) ? x.length()/2 + 1 : x.length()/2)){ 
+							//turn this into BFS?
+							if(prefixTarget.equals(xPrefix) && prefixTarget.length()>0){
+					//			System.out.println("\"" + a + "\" matched with \"" + x + "\" with -" + prefixTarget + "-");
+								//if there is overlap
+								ArrayList<String> path = new ArrayList<String>();
+								path.addAll(currentPath);
+								path.add(word);
+								paths.add(path);
+								//to there 
+								continue NEXT_WORD; //break out of this loop
+							}
+						}
+				
+				}
+				
+				
+				
+				 
+			}
+			
+			
+			
+			
+		}
+		
 		
 		String a = curr.data;
 		int commonPartSize = Math.max(a.length()/2, END.length()/2); 
 		if(Math.max(a.length(), END.length()) % 2 == 1){ //is odd
 			commonPartSize++; 
 		}
+		
 		
 		//System.out.println("CURRENT CHAIN: " + doubleChain.printNodes()); 
 	//	System.out.println("Looking at " + curr.data +"\n");
@@ -433,6 +724,10 @@ public class JoinedUpWritingList{
 				curr = curr.prev;
 			}
 		}
-		return NOTFOUND;  
+		//return new ArrayList<String>();
+		return NOTFOUND; 
 	}
-}
+	
+	//an abstraction over a non-binary search tree for words by character
+	
+}*/

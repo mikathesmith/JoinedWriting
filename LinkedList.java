@@ -21,6 +21,10 @@ public class LinkedList{
 		   Node next;
 		   Node prev; 
 		   String data;
+		   int nodesToEnd; //would this work as a measure of how close we are to the end?
+		   
+		   //for every alternative, do we have a count for how long it takes to 
+		   //reach the END word?? Is this stored in the node? 
 		   ArrayList<String> alternativeMatches = new ArrayList<String>(); 
 		   ArrayList<String> ignoreList = new ArrayList<String>(); 
 		   
@@ -33,6 +37,15 @@ public class LinkedList{
 			   this.data = data;
 			   prev = null; 
 		   }  
+	}
+	
+	public LinkedList(){
+		this.head = null;
+	}
+	
+	public LinkedList(LinkedList l){
+		System.out.println("adding " + l.head.data);
+		head = l.head;
 	}
 	
 	/*
@@ -52,6 +65,18 @@ public class LinkedList{
 	//	System.out.println("ADDED NODE "+ current.next.data);
 	}
 	
+	public static void addNodes(LinkedList listToAdd){
+		Node curr = listToAdd.head; 
+		System.out.println("head of list to add is " + curr);
+		while(curr.next != null){
+			System.out.println("Adding node " + curr.data);
+			appendNode(curr.data); //append to current list
+			curr = curr.next; 
+		}
+	//	System.out.println("ADDED NODE "+ current.next.data);
+	}
+	
+
 	/*
 	 * Removes a node. 
 	 */
@@ -125,6 +150,7 @@ public class LinkedList{
 	 */
 	public static String printNodes(){
 		StringBuilder sb = new StringBuilder(); 
+		sb.append(numNodes()+" ");
 		if(head != null){ 
 	        Node current = head; 
 	        while(current != null){
