@@ -28,6 +28,8 @@ public class JoinUp {
      * Tree structure for storing words as trees of characters
      */
     private TreeNode tree = new TreeNode();
+    
+	public static int count;
 
     public static void main(String[] args) {
         new JoinUp(args[0], args[1]).run();
@@ -52,8 +54,12 @@ public class JoinUp {
      * Prints the single linked and double linked word chains
      */
     public void run() {
+    	long startTime = System.currentTimeMillis();
         printList(getSingleLinkedArray());
         printList(getDoubleLinkedArray());
+        long estimatedTime = System.currentTimeMillis() - startTime;
+		
+		System.out.println("Looked through " + count + " options. Time was " + estimatedTime);
     }
 
     /**
@@ -88,9 +94,11 @@ public class JoinUp {
         initial.add(first);
         // Add this to our paths queue
         paths.add(initial);
+        count = 0;
 
         // Breadth-First Search
         while (!paths.isEmpty()) {
+        	count++;
             // Take the next path off the queue
             ArrayList<String> currentPath = paths.remove();
             // Get the last word from that path

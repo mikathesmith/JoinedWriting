@@ -1,6 +1,6 @@
-read
+read   
 a
-fixture
+fixture   
 fixage
 ire
 ardent
@@ -12,6 +12,7 @@ help
 ableeze
 ea
 abacus 
+ateido
 fth
 acusector
 ectoretina
@@ -25,3 +26,6 @@ dft
 heteroplasty
 astyanax
 anaxagorean
+catree
+reedog
+catdog

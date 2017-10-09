@@ -65,6 +65,7 @@ public class TrieContact {
             }
             return retval; 
         }
+        
     }
 
     public static void main(String[] args) {
